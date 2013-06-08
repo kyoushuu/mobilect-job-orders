@@ -18,9 +18,17 @@
  *
  */
 
-int main (string[] args) {
-    var app = new Mpcjo.Application ();
-    app.run (args);
+using Gtk;
 
-    return 0;
+public class Mpcjo.Application : Gtk.Application {
+
+    public Application () {
+        Object (application_id: "com.mobilectpower.JobOrders");
+    }
+
+    public override void activate () {
+        var window = new ApplicationWindow (this);
+        window.present ();
+    }
+
 }
