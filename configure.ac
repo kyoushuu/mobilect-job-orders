@@ -100,6 +100,7 @@ PKG_CHECK_MODULES([GTK], [gtk+-3.0 >= 3.8.0])
 
 AC_CONFIG_FILES([
 Makefile
+src/Makefile
 po/Makefile.in
 ])
 
