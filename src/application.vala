@@ -60,6 +60,7 @@ public class Mpcjo.Application : Gtk.Application {
             builder.connect_signals (this);
 
             var window = builder.get_object ("window") as Window;
+            window.initialize ();
             window.present ();
         } catch (Error e) {
             error ("Failed to build window: %s", e.message);
