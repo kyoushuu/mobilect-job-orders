@@ -92,6 +92,13 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [GETTEXT package name])
 
 
 dnl ***************************************************************************
+dnl Configure submodules
+dnl ***************************************************************************
+
+LIBGD_INIT([header-bar notification revealer stack static tagged-entry vapi])
+
+
+dnl ***************************************************************************
 dnl Check packages
 dnl ***************************************************************************
 
@@ -108,6 +115,7 @@ AC_SUBST(GLIB_COMPILE_RESOURCES)
 
 AC_CONFIG_FILES([
 Makefile
+libgd/Makefile
 src/Makefile
 po/Makefile.in
 ])

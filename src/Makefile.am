@@ -9,6 +9,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
+	-I$(top_srcdir)/libgd \
 	$(GTK_CFLAGS) \
 	$(NULL)
 
@@ -25,7 +26,9 @@ mobilect_job_orders_SOURCES = \
 	$(NULL)
 
 mobilect_job_orders_VALAFLAGS = \
+	--vapidir=$(top_builddir)/libgd \
 	--pkg=gtk+-3.0 \
+	--pkg=gd-1.0 \
 	--debug \
 	$(NULL)
 
@@ -36,6 +39,7 @@ mobilect_job_orders_LDFLAGS = \
 
 mobilect_job_orders_LDADD = \
 	$(GTK_LIBS) \
+	$(top_builddir)/libgd/libgd.la \
 	$(NULL)
 
 
