@@ -3,5 +3,6 @@
   <gresource prefix="/com/mobilectpower/JobOrders">
     <file preprocess="xml-stripblanks">application.ui</file>
     <file preprocess="xml-stripblanks">window.ui</file>
+    <file preprocess="xml-stripblanks">job-order-list-view.ui</file>
   </gresource>
 </gresources>

@@ -26,6 +26,7 @@ mobilect_job_orders_SOURCES = \
 	database.vala \
 	application.vala \
 	window.vala \
+	job-order-list-view.vala \
 	config.vapi \
 	resources.c \
 	$(NULL)
@@ -59,6 +60,7 @@ mobilect_job_orders_LDADD = \
 resources = \
 	application.ui \
 	window.ui \
+	job-order-list-view.ui \
 	$(NULL)
 
 resources.c: mobilect-job-orders.gresource.xml $(resources)
