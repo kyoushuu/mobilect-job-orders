@@ -25,6 +25,7 @@ mobilect_job_orders_SOURCES = \
 	main.vala \
 	database.vala \
 	application.vala \
+	config.vapi \
 	resources.c \
 	$(NULL)
 
