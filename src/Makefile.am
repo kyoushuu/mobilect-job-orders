@@ -23,6 +23,7 @@ bin_PROGRAMS = mobilect-job-orders
 
 mobilect_job_orders_SOURCES = \
 	main.vala \
+	database.vala \
 	application.vala \
 	resources.c \
 	$(NULL)
