@@ -11,6 +11,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
 	-I$(top_srcdir)/libgd \
 	$(GTK_CFLAGS) \
+	$(GDA_CFLAGS) \
 	$(MOBILECT_WIDGETS_CFLAGS) \
 	$(NULL)
 
@@ -27,9 +28,11 @@ mobilect_job_orders_SOURCES = \
 	$(NULL)
 
 mobilect_job_orders_VALAFLAGS = \
+	--vapidir=$(top_builddir)/vapi \
 	--vapidir=$(top_builddir)/libgd \
 	--vapidir=$(MOBILECT_WIDGETS_VAPIDIR) \
 	--pkg=gtk+-3.0 \
+	--pkg=libgda-5.0 \
 	--pkg=gd-1.0 \
 	--pkg=mobilect-widgets-1.0 \
 	--thread \
@@ -44,6 +47,7 @@ mobilect_job_orders_LDFLAGS = \
 
 mobilect_job_orders_LDADD = \
 	$(GTK_LIBS) \
+	$(GDA_LIBS) \
 	$(MOBILECT_WIDGETS_LIBS) \
 	$(top_builddir)/libgd/libgd.la \
 	$(NULL)
