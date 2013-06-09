@@ -22,11 +22,37 @@ using Gtk;
 
 public class Mpcjo.Application : Gtk.Application {
 
+    public Database database;
+
     public Application () {
         Object (application_id: "com.mobilectpower.JobOrders");
     }
 
+    public override void startup () {
+        base.startup ();
+
+        try {
+            /* Create config directory with permission 0754 */
+            var db_dir = Path.build_filename (Environment.get_user_config_dir (), Config.PACKAGE);
+            DirUtils.create_with_parents (db_dir, 0754);
+
+            database = new Database ("SQLite://DB_DIR=%s;DB_NAME=%s".printf (db_dir, Config.PACKAGE));
+            database.initialize.begin ();
+        } catch (Error e) {
+            var e_dialog = new MessageDialog (null, DialogFlags.MODAL,
+                                              MessageType.ERROR, ButtonsType.OK,
+                                              "Failed to load database.");
+            e_dialog.secondary_text = e.message;
+            e_dialog.run ();
+            e_dialog.destroy ();
+        }
+    }
+
     public override void activate () {
+        if (database == null) {
+            return;
+        }
+
         var window = new ApplicationWindow (this);
         window.present ();
     }
