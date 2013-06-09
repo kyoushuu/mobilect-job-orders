@@ -24,6 +24,7 @@ using Gd;
 public class Mpcjo.Window : ApplicationWindow {
 
     public Stack stack_view;
+    public JobOrderListView joborderlistview;
 
     public Mpcjo.Application app {
         public get {
@@ -46,6 +47,7 @@ public class Mpcjo.Window : ApplicationWindow {
             add (box);
 
             stack_view = builder.get_object ("stack_view") as Stack;
+            joborderlistview = builder.get_object ("joborderlistview") as JobOrderListView;
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
