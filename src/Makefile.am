@@ -32,6 +32,8 @@ mobilect_job_orders_VALAFLAGS = \
 	--pkg=gtk+-3.0 \
 	--pkg=gd-1.0 \
 	--pkg=mobilect-widgets-1.0 \
+	--thread \
+	--target-glib=2.32 \
 	--debug \
 	$(NULL)
 
