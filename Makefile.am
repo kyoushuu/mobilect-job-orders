@@ -6,6 +6,7 @@ NULL =
 
 SUBDIRS = \
 	libgd \
+	vapi \
 	src \
 	po \
 	$(NULL)

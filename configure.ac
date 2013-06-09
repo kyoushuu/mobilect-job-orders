@@ -121,6 +121,7 @@ AC_SUBST(GLIB_COMPILE_RESOURCES)
 AC_CONFIG_FILES([
 Makefile
 libgd/Makefile
+vapi/Makefile
 src/Makefile
 po/Makefile.in
 ])
