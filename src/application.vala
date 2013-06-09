@@ -53,8 +53,17 @@ public class Mpcjo.Application : Gtk.Application {
             return;
         }
 
-        var window = new ApplicationWindow (this);
-        window.present ();
+	try {
+            var builder = new Builder ();
+            builder.expose_object ("application", this);
+            builder.add_from_resource ("/com/mobilectpower/JobOrders/application.ui");
+            builder.connect_signals (this);
+
+            var window = builder.get_object ("window") as Window;
+            window.present ();
+        } catch (Error e) {
+            error ("Failed to build window: %s", e.message);
+        }
     }
 
 }

@@ -57,6 +57,7 @@ mobilect_job_orders_LDADD = \
 
 
 resources = \
+	application.ui \
 	window.ui \
 	$(NULL)
 
