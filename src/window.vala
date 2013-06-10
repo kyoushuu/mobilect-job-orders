@@ -29,6 +29,7 @@ public class Mpcjo.Window : ApplicationWindow {
     public Stack stack_view;
 
     public JobOrderListView joborderlistview;
+    public JobOrderEditor jobordereditor;
 
     public Mpcjo.Application app {
         public get {
@@ -94,10 +95,40 @@ public class Mpcjo.Window : ApplicationWindow {
 
     [CCode (instance_pos = -1)]
     public void on_button_new_clicked (Button button) {
+        jobordereditor = new JobOrderEditor (app.database);
+        jobordereditor.show ();
+        stack_view.add (jobordereditor);
+        stack_view.set_visible_child (jobordereditor);
+        jobordereditor.create_new.begin ();
     }
 
     [CCode (instance_pos = -1)]
     public void on_button_back_clicked (Button button) {
+        if (jobordereditor != null) {
+            jobordereditor.save.begin ((obj, res) => {
+                if (jobordereditor.save.end (res)) {
+                    debug ("Save finished");
+
+                    jobordereditor.destroy ();
+                    jobordereditor = null;
+
+                    /* FIXME: Lessen loading here */
+                    load_job_orders.begin ((obj, res) => {
+                        load_job_orders.end (res);
+                    });
+                }
+            });
+        }
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_joborderlistview_job_order_selected (JobOrderListView view,
+                                                        int id) {
+        jobordereditor = new JobOrderEditor (app.database);
+        jobordereditor.show ();
+        stack_view.add (jobordereditor);
+        stack_view.set_visible_child (jobordereditor);
+        jobordereditor.edit.begin (id);
     }
 
 }

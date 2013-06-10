@@ -54,6 +54,7 @@
                   <object class="MpcjoJobOrderListView" id="joborderlistview">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <signal name="job-order-selected" handler="mpcjo_window_on_joborderlistview_job_order_selected" swapped="no"/>
                   </object>
                 </child>
               </object>
