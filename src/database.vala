@@ -318,4 +318,498 @@ public class Database : Object {
         return true;
     }
 
+    public async int create_job_order (int refnum, int customer_id, string desc, string address, string date_start, string date_end, int po_id) throws Error {
+        SourceFunc callback = create_job_order.callback;
+        int jo_id = 0;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params, last_insert_row;
+            Value? value_jo_ref_number = null, value_jo_customer = null, value_po_id = null;
+
+            debug ("Queue creation of job order with reference number %d", refnum);
+
+            value_jo_ref_number = refnum;
+            value_jo_customer = customer_id;
+
+            if (po_id > 0) {
+                value_po_id = po_id;
+            } else {
+                value_po_id = null;
+            }
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("INSERT INTO job_orders (" +
+                                                 " ref_number," +
+                                                 " description," +
+                                                 " customer, address," +
+                                                 " date_start, date_end," +
+                                                 " purchase_order" +
+                                                 ") VALUES (" +
+                                                 " ##ref_number::int," +
+                                                 " ##description::string," +
+                                                 " ##customer::int," +
+                                                 " ##address::string," +
+                                                 " ##date_start::string," +
+                                                 " ##date_end::string," +
+                                                 " ##purchase_order::int::null" +
+                                                 ")",
+                                                 out stmt_params);
+
+                stmt_params.get_holder ("ref_number").set_value (value_jo_ref_number);
+                stmt_params.get_holder ("description").set_value_str (null, desc);
+                stmt_params.get_holder ("customer").set_value (value_jo_customer);
+                stmt_params.get_holder ("address").set_value_str (null, address);
+                stmt_params.get_holder ("date_start").set_value_str (null, date_start);
+                stmt_params.get_holder ("date_end").set_value_str (null, date_end);
+                stmt_params.get_holder ("purchase_order").set_value (value_po_id);
+                cnc.statement_execute_non_select (stmt, stmt_params, out last_insert_row);
+
+                if (last_insert_row != null) {
+                    jo_id = last_insert_row.get_holder_value ("+0").get_int ();
+                } else {
+                    /* FIXME: Get row here */
+                }
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Job order with reference number %d successfully created", refnum);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("cjo", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued creation of job order with reference number %d", refnum);
+
+        return jo_id;
+    }
+
+    public async bool update_job_order (int jo_id, int refnum, int customer_id, string desc, string address, string date_start, string date_end, int po_id) throws Error {
+        SourceFunc callback = update_job_order.callback;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+            Value? value_jo_id, value_jo_ref_number = null, value_jo_customer = null, value_po_id = null;
+
+            debug ("Queue update of job order with reference number %d", refnum);
+
+            value_jo_id = jo_id;
+            value_jo_ref_number = refnum;
+            value_jo_customer = customer_id;
+
+            if (po_id > 0) {
+                value_po_id = po_id;
+            } else {
+                value_po_id = null;
+            }
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("UPDATE job_orders " +
+                                                 "SET " +
+                                                 " ref_number=##ref_number::int," +
+                                                 " description=##description::string," +
+                                                 " customer=##customer::int," +
+                                                 " address=##address::string," +
+                                                 " date_start=##date_start::string," +
+                                                 " date_end=##date_end::string," +
+                                                 " purchase_order=##purchase_order::int::null " +
+                                                 "WHERE id=##id::int",
+                                                 out stmt_params);
+                stmt_params.get_holder ("id").set_value (value_jo_id);
+                stmt_params.get_holder ("ref_number").set_value (value_jo_ref_number);
+                stmt_params.get_holder ("description").set_value_str (null, desc);
+                stmt_params.get_holder ("customer").set_value (value_jo_customer);
+                stmt_params.get_holder ("address").set_value_str (null, address);
+                stmt_params.get_holder ("date_start").set_value_str (null, date_start);
+                stmt_params.get_holder ("date_end").set_value_str (null, date_end);
+                stmt_params.get_holder ("purchase_order").set_value (value_po_id);
+                cnc.statement_execute_non_select (stmt, stmt_params, null);
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Job order with reference number %d successfully updated", refnum);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("ujo", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued update of job order with reference number %d", refnum);
+
+        return true;
+    }
+
+    /* FIXME: Remove also the purchase order here */
+    public async bool remove_job_order (int jo_id) throws Error {
+        SourceFunc callback = remove_job_order.callback;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+            Value? value_jo_id;
+
+            debug ("Queue removal of job order with id number %d", jo_id);
+
+            value_jo_id = jo_id;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("DELETE FROM job_orders WHERE id=##id::int",
+                                                 out stmt_params);
+                stmt_params.get_holder ("id").set_value (value_jo_id);
+                cnc.statement_execute_non_select (stmt, stmt_params, null);
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Job order with id number %d successfully removed", jo_id);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("rjo", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued removal of job order with id number %d", jo_id);
+
+        return true;
+    }
+
+    public async int get_customer_id (string name) throws Error {
+        SourceFunc callback = get_customer_id.callback;
+        int customer_id = 0;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+
+            debug ("Looking for ID of customer with name \"%s\"", name);
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("SELECT id FROM customers WHERE name=##name::string",
+                                                 out stmt_params);
+                stmt_params.get_holder ("name").set_value_str (null, name);
+
+                var dm = cnc.statement_execute_select (stmt, stmt_params);
+                var iter = dm.create_iter ();
+                if (iter.move_next ()) {
+                    customer_id = (int) iter.get_value_at (0);
+                }
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("ID of customer with name \"%s\" found", name);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("rc", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Finished search for ID of customer with name \"%s\"", name);
+
+        return customer_id;
+    }
+
+    public async int create_customer (string name, string address) throws Error {
+        SourceFunc callback = create_customer.callback;
+        int customer_id = 0;
+
+        debug ("Queue creation of customer with name \"%s\"", name);
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params, last_insert_row;
+
+            debug ("Queue creation of customer with name \"%s\"", name);
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("INSERT INTO customers (" +
+                                                 " name, address" +
+                                                 ") VALUES (" +
+                                                 " ##name::string," +
+                                                 " ##address::string::null" +
+                                                 ")",
+                                                 out stmt_params);
+
+                stmt_params.get_holder ("name").set_value_str (null, name);
+                stmt_params.get_holder ("address").set_value_str (null, address);
+                cnc.statement_execute_non_select (stmt, stmt_params, out last_insert_row);
+
+                if (last_insert_row != null) {
+                    customer_id = last_insert_row.get_holder_value ("+0").get_int ();
+                } else {
+                    /* FIXME: Get row here */
+                }
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Customer with name \"%s\" successfully created", name);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("cc", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued creation of customer with name \"%s\"", name);
+
+        return customer_id;
+    }
+
+    public async bool remove_customer (int customer_id) throws Error {
+        SourceFunc callback = remove_customer.callback;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+            Value? value_customer_id;
+
+            debug ("Queue removal of customer with id number %d", customer_id);
+
+            value_customer_id = customer_id;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("DELETE FROM customers WHERE id=##id::int",
+                                                 out stmt_params);
+                stmt_params.get_holder ("id").set_value (value_customer_id);
+                cnc.statement_execute_non_select (stmt, stmt_params, null);
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Customer with id number %d successfully removed", customer_id);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("rc", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued removal of customer with id number %d", customer_id);
+
+        return true;
+    }
+
+    public async int create_purchase_order (int refnum, string date) throws Error {
+        SourceFunc callback = create_purchase_order.callback;
+        int po_id = 0;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params, last_insert_row;
+            Value? value_po_ref_number;
+
+            debug ("Queue creation of purchase order with reference number %d", refnum);
+
+            value_po_ref_number = refnum;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("INSERT INTO purchase_orders (" +
+                                                 " ref_number," +
+                                                 " date" +
+                                                 ") VALUES (" +
+                                                 " ##ref_number::int," +
+                                                 " ##date::string::null" +
+                                                 ")",
+                                                 out stmt_params);
+
+                stmt_params.get_holder ("ref_number").set_value (value_po_ref_number);
+                stmt_params.get_holder ("date").set_value_str (null, date);
+                cnc.statement_execute_non_select (stmt, stmt_params, out last_insert_row);
+
+                if (last_insert_row != null) {
+                    po_id = last_insert_row.get_holder_value ("+0").get_int ();
+                } else {
+                    /* FIXME: Get row here */
+                }
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Purchase order with reference number %d successfully created", refnum);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("cpo", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued creation of purchase order with reference number %d", refnum);
+
+        return po_id;
+    }
+
+    public async bool update_purchase_order (int po_id, int refnum, string date) throws Error {
+        SourceFunc callback = update_purchase_order.callback;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+            Value? value_po_id, value_po_ref_number;
+
+            debug ("Queue update of purchase order with reference number %d", refnum);
+
+            value_po_id = po_id;
+            value_po_ref_number = refnum;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("UPDATE purchase_orders " +
+                                                 "SET " +
+                                                 " ref_number=##ref_number::int," +
+                                                 " date=##date::string " +
+                                                 "WHERE id=##id::int",
+                                                 out stmt_params);
+                stmt_params.get_holder ("id").set_value (value_po_id);
+                stmt_params.get_holder ("ref_number").set_value (value_po_ref_number);
+                stmt_params.get_holder ("date").set_value_str (null, date);
+                cnc.statement_execute_non_select (stmt, stmt_params, null);
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Purchase order with reference number %d successfully updated", refnum);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("upo", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued update of purchase order with reference number %d", refnum);
+
+        return true;
+    }
+
+    public async bool remove_purchase_order (int po_id) throws Error {
+        SourceFunc callback = remove_purchase_order.callback;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+            Value? value_po_id;
+
+            debug ("Queue removal of purchase order with id number %d", po_id);
+
+            value_po_id = po_id;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("DELETE FROM purchase_orders WHERE id=##id::int",
+                                                 out stmt_params);
+                stmt_params.get_holder ("id").set_value (value_po_id);
+                cnc.statement_execute_non_select (stmt, stmt_params, null);
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Purchase order with id number %d successfully removed", po_id);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("rpo", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued removal of purchase order with id number %d", po_id);
+
+        return true;
+    }
+
 }
