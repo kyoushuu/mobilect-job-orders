@@ -11,6 +11,7 @@
     <style>
       <class name="content-view"/>
     </style>
+    <signal name="row-activated" handler="mpcjo_job_order_list_view_on_treeview_row_activated" swapped="no"/>
     <child internal-child="selection">
       <object class="GtkTreeSelection" id="treeview-selection_results">
         <property name="mode">none</property>

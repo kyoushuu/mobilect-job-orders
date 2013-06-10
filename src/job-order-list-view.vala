@@ -44,6 +44,8 @@ public class Mpcjo.JobOrderListView : Bin {
         }
     }
 
+    public signal void job_order_selected (int id);
+
     private TreeView treeview;
 
     private TreeViewColumn treeviewcolumn_job_order;
@@ -161,6 +163,23 @@ public class Mpcjo.JobOrderListView : Bin {
             });
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
+        }
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_treeview_row_activated (TreeView tree_view,
+                                           TreePath path,
+                                           TreeViewColumn column) {
+        TreeIter sort_iter, filter_iter, iter;
+
+        if (sort.get_iter (out sort_iter, path)) {
+            sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
+            filter.convert_iter_to_child_iter (out iter, filter_iter);
+
+            int id;
+            list.get (iter, Database.JobOrdersListColumns.ID, out id);
+
+            job_order_selected (id);
         }
     }
 
