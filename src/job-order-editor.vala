@@ -22,7 +22,7 @@ using Gtk;
 using Gda;
 using Mpcw;
 
-public class Mpcjo.JobOrderEditor : Bin {
+public class Mpcjo.JobOrderEditor : StackPage {
 
     public bool editable { public get; private set; }
     public Database database { public get; private set; }
@@ -52,8 +52,8 @@ public class Mpcjo.JobOrderEditor : Bin {
             builder.add_from_resource ("/com/mobilectpower/JobOrders/job-order-editor.ui");
             builder.connect_signals (this);
 
-            var grid = builder.get_object ("grid_jo_editor") as Grid;
-            add (grid);
+            var scrolledwindow = builder.get_object ("scrolledwindow") as ScrolledWindow;
+            add (scrolledwindow);
 
             can_focus = true;
 
