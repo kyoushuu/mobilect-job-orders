@@ -20,8 +20,9 @@
 
 using Gtk;
 using Gda;
+using Mpcw;
 
-public class Mpcjo.JobOrderListView : Bin {
+public class Mpcjo.JobOrderListView : View {
 
     private ListStore? _list;
     public ListStore? list {
@@ -46,6 +47,7 @@ public class Mpcjo.JobOrderListView : Bin {
 
     public signal void job_order_selected (int id);
 
+    private Overlay overlay;
     private TreeView treeview;
 
     private TreeViewColumn treeviewcolumn_job_order;
@@ -66,8 +68,10 @@ public class Mpcjo.JobOrderListView : Bin {
             builder.add_from_resource ("/com/mobilectpower/JobOrders/job-order-list-view.ui");
             builder.connect_signals (this);
 
+            overlay = builder.get_object ("overlay") as Overlay;
+            add (overlay);
+
             treeview = builder.get_object ("treeview") as TreeView;
-            add (treeview);
 
             treeviewcolumn_job_order = builder.get_object ("treeviewcolumn_job_order") as TreeViewColumn;
             cellrenderertext_job_order_number = builder.get_object ("cellrenderertext_job_order_number") as CellRendererText;
