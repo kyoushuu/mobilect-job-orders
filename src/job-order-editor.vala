@@ -40,12 +40,6 @@ public class Mpcjo.JobOrderEditor : Bin {
     private DateEntry entry_jo_date_start;
     private DateEntry entry_jo_date_end;
 
-    private Switch switch_po;
-    private Alignment alignment_po_properties;
-
-    private SpinButton spinbutton_po_refnum;
-    private DateEntry entry_po_date;
-
     private CellAreaBox cellareabox_jo_customer;
     private CellRendererText cellrenderertext_name;
     private CellRendererText cellrenderertext_address;
@@ -72,22 +66,9 @@ public class Mpcjo.JobOrderEditor : Bin {
             entry_jo_date_start = builder.get_object ("entry_jo_date_start") as DateEntry;
             entry_jo_date_end = builder.get_object ("entry_jo_date_end") as DateEntry;
 
-            switch_po = builder.get_object ("switch_po") as Switch;
-            alignment_po_properties = builder.get_object ("alignment_po_properties") as Alignment;
-
-            spinbutton_po_refnum = builder.get_object ("spinbutton_po_refnum") as SpinButton;
-            entry_po_date = builder.get_object ("entry_po_date") as DateEntry;
-
             cellareabox_jo_customer = builder.get_object ("cellareabox_jo_customer") as CellAreaBox;
             cellrenderertext_name = builder.get_object ("cellrenderertext_name") as CellRendererText;
             cellrenderertext_address = builder.get_object ("cellrenderertext_address") as CellRendererText;
-
-            /*
-             * If purchase order switch is off, purchase order properties are
-             * insensitive
-             */
-            switch_po.bind_property ("active", alignment_po_properties, "sensitive",
-                                     BindingFlags.DEFAULT);
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -120,10 +101,6 @@ public class Mpcjo.JobOrderEditor : Bin {
         entry_jo_address.text = "";
         entry_jo_date_start.entry.text = "";
         entry_jo_date_end.entry.text = "";
-
-        switch_po.active = false;
-        spinbutton_po_refnum.value = 0;
-        entry_po_date.entry.text = "";
 
         customers = database.create_customers_list ();
         yield database.load_customers_to_model (customers);
@@ -172,11 +149,9 @@ public class Mpcjo.JobOrderEditor : Bin {
                                       " description," +
                                       " customers.id, customers.name, job_orders.address," +
                                       " date_start, date_end," +
-                                      " purchase_orders.id," +
-                                      " purchase_orders.ref_number, purchase_orders.date " +
+                                      " purchase_order " +
                                       "FROM job_orders " +
                                       "LEFT JOIN customers ON (job_orders.customer = customers.id) " +
-                                      "LEFT JOIN purchase_orders ON (job_orders.purchase_order = purchase_orders.id) " +
                                       "WHERE job_orders.id=##id::int",
                                       out stmt_params);
 
@@ -248,20 +223,6 @@ public class Mpcjo.JobOrderEditor : Bin {
                              (int) column : 0);
                 }
 
-                column = iter.get_value_at (9);
-                var po_number = (!column.holds (typeof (Null))?
-                                 (int) column : 0);
-
-                column = iter.get_value_at (10);
-                date = Date ();
-                date.set_parse (database.dh_string.get_str_from_value (column));
-
-                var date_po = "";
-                if (date.valid ()) {
-                    date.strftime (s, "%a, %d %b, %Y");
-                    date_po = ((string) s).dup ();
-                }
-
                 Idle.add (() => {
                     spinbutton_jo_refnum.value = jo_number;
                     entry_jo_desc.text = description;
@@ -269,12 +230,6 @@ public class Mpcjo.JobOrderEditor : Bin {
                     entry_jo_address.text = address;
                     entry_jo_date_start.entry.text = date_start;
                     entry_jo_date_end.entry.text = date_end;
-
-                    lock (po_id) {
-                        switch_po.active = (po_id > 0);
-                    }
-                    spinbutton_po_refnum.value = po_number;
-                    entry_po_date.entry.text = date_po;
 
                     debug ("Finished loading of job order data");
 
@@ -316,8 +271,6 @@ public class Mpcjo.JobOrderEditor : Bin {
 
                 lock (jo_id) {
                     if (jo_id > 0) {
-                        /* FIXME: Check if have purchase order but disabled (warning for deletion) */
-
                         yield update_job_order ();
                     } else {
                         jo_id = yield create_job_order ();
@@ -360,14 +313,6 @@ public class Mpcjo.JobOrderEditor : Bin {
             }
         }
 
-        lock (po_id) {
-            if (switch_po.active) {
-                po_id = yield create_purchase_order ();
-            } else {
-                po_id = 0;
-            }
-        }
-
         lock (customer_id) {
             lock (po_id) {
                 ret = yield database.create_job_order ((int) spinbutton_jo_refnum.value,
@@ -396,21 +341,6 @@ public class Mpcjo.JobOrderEditor : Bin {
             }
         }
 
-        lock (po_id) {
-            if (switch_po.active) {
-                if (po_id <= 0) {
-                    po_id = yield create_purchase_order ();
-                } else {
-                    yield update_purchase_order ();
-                }
-            } else {
-                if (po_id > 0) {
-                    yield remove_purchase_order ();
-                    po_id = 0;
-                }
-            }
-        }
-
         lock (jo_id) {
             lock (customer_id) {
                 lock (po_id) {
@@ -432,13 +362,6 @@ public class Mpcjo.JobOrderEditor : Bin {
     public async bool remove_job_order () throws Error {
         bool ret = false;
 
-        lock (po_id) {
-            if (po_id > 0) {
-                yield remove_purchase_order ();
-                po_id = 0;
-            }
-        }
-
         lock (jo_id) {
             ret = yield database.remove_job_order (jo_id);
         }
@@ -449,37 +372,6 @@ public class Mpcjo.JobOrderEditor : Bin {
     public async int create_customer () throws Error {
         return yield database.create_customer (entry_jo_customer.text,
                                                entry_jo_address.text);
-    }
-
-    public async int create_purchase_order () throws Error {
-        int ret = 0;
-
-        ret = yield database.create_purchase_order ((int) spinbutton_po_refnum.value,
-                                                    entry_po_date.entry.text);
-
-        return ret;
-    }
-
-    public async bool update_purchase_order () throws Error {
-        bool ret = false;
-
-        lock (po_id) {
-            ret = yield database.update_purchase_order (po_id,
-                                                        (int) spinbutton_po_refnum.value,
-                                                        entry_po_date.entry.text);
-        }
-
-        return ret;
-    }
-
-    public async bool remove_purchase_order () throws Error {
-        bool ret = false;
-
-        lock (po_id) {
-            ret = yield database.remove_purchase_order (po_id);
-        }
-
-        return ret;
     }
 
     [CCode (instance_pos = -1)]
