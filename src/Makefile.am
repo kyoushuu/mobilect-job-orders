@@ -60,7 +60,6 @@ mobilect_job_orders_LDADD = \
 
 resources = \
 	application.ui \
-	window.ui \
 	job-order-list-view.ui \
 	job-order-editor.ui \
 	$(NULL)
