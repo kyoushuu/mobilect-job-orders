@@ -26,6 +26,7 @@ using Mpcw;
 public class Mpcjo.JobOrderListView : View {
 
     public Database database { public get; private set; }
+    public int selected_items_num { public get; private set; }
 
     private ListStore? _list;
     public ListStore? list {
@@ -45,6 +46,8 @@ public class Mpcjo.JobOrderListView : View {
                 sort = null;
                 treeview.model = null;
             }
+
+            selected_items_num = 0;
         }
     }
 
@@ -54,6 +57,7 @@ public class Mpcjo.JobOrderListView : View {
     private Overlay overlay;
     private TreeView treeview;
 
+    private TreeViewColumn treeviewcolumn_selected;
     private TreeViewColumn treeviewcolumn_job_order;
     private CellRendererText cellrenderertext_job_order_number;
     private TreeViewColumn treeviewcolumn_customer;
@@ -77,6 +81,7 @@ public class Mpcjo.JobOrderListView : View {
 
             treeview = builder.get_object ("treeview") as TreeView;
 
+            treeviewcolumn_selected = builder.get_object ("treeviewcolumn_selected") as TreeViewColumn;
             treeviewcolumn_job_order = builder.get_object ("treeviewcolumn_job_order") as TreeViewColumn;
             cellrenderertext_job_order_number = builder.get_object ("cellrenderertext_job_order_number") as CellRendererText;
             treeviewcolumn_customer = builder.get_object ("treeviewcolumn_customer") as TreeViewColumn;
@@ -169,6 +174,10 @@ public class Mpcjo.JobOrderListView : View {
                     cellrenderertext_purchase_order_number.markup = null;
                 }
             });
+
+            /* Show select column if select is active */
+            bind_property ("selection-mode-enabled", treeviewcolumn_selected, "visible",
+                           BindingFlags.SYNC_CREATE);
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -212,12 +221,26 @@ public class Mpcjo.JobOrderListView : View {
             sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
             filter.convert_iter_to_child_iter (out iter, filter_iter);
 
-            int id;
-            list.get (iter, Database.JobOrdersListColumns.ID, out id);
+            if (selection_mode) {
+                bool selected;
+                list.get (iter, Database.JobOrdersListColumns.SELECTED, out selected);
 
-            create_editor ();
-            jobordereditor.edit.begin (id);
-            job_order_selected (id);
+                if (selected) {
+                    selected_items_num--;
+                } else {
+                    selected_items_num++;
+                }
+
+                selected = !selected;
+                list.set (iter, Database.JobOrdersListColumns.SELECTED, selected);
+            } else {
+                int id;
+                list.get (iter, Database.JobOrdersListColumns.ID, out id);
+
+                create_editor ();
+                jobordereditor.edit.begin (id);
+                job_order_selected (id);
+            }
         }
     }
 

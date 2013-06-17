@@ -26,6 +26,19 @@
               </object>
             </child>
             <child>
+              <object class="GtkTreeViewColumn" id="treeviewcolumn_selected">
+                <property name="min_width">50</property>
+                <property name="title" translatable="yes">Selected</property>
+                <property name="alignment">0.5</property>
+                <child>
+                  <object class="GtkCellRendererToggle" id="cellrenderertoggle_selected"/>
+                  <attributes>
+                    <attribute name="active">10</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
               <object class="GtkTreeViewColumn" id="treeviewcolumn_job_order">
                 <property name="min_width">50</property>
                 <property name="title" translatable="yes">Job Order</property>
