@@ -34,6 +34,7 @@ public class Database : Object {
         PURCHASE_ORDER_REF_NUM,
         PURCHASE_ORDER_DATE,
         VISIBLE,
+        SELECTED,
         NUM
     }
 
@@ -126,7 +127,7 @@ public class Database : Object {
                               typeof (string), typeof (string),  /* Customer and address */
                               typeof (string), typeof (string),  /* Start and end date */
                               typeof (int), typeof (string),     /* Purchase order */
-                              typeof (bool));                    /* Visible */
+                              typeof (bool), typeof (bool));     /* Visible and selected */
     }
 
     public async bool load_job_orders_to_model (ListStore model) throws Error {
@@ -210,7 +211,8 @@ public class Database : Object {
                                               JobOrdersListColumns.DATE_END, date_end,
                                               JobOrdersListColumns.PURCHASE_ORDER_REF_NUM, po_number,
                                               JobOrdersListColumns.PURCHASE_ORDER_DATE, date_po,
-                                              JobOrdersListColumns.VISIBLE, true);
+                                              JobOrdersListColumns.VISIBLE, true,
+                                              JobOrdersListColumns.SELECTED, false);
 
                     debug ("Inserted job order with id number %d to tree model", id);
 
