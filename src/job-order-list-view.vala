@@ -190,6 +190,31 @@ public class Mpcjo.JobOrderListView : View {
         });
     }
 
+    public void select_all () {
+        if (list == null)
+            return;
+
+        selected_items_num = 0;
+        list.foreach ((model, path, iter) => {
+            list.set (iter, Database.JobOrdersListColumns.SELECTED, true);
+                selected_items_num++;
+
+                return false;
+        });
+    }
+
+    public void select_none () {
+        if (list == null)
+            return;
+
+        list.foreach ((model, path, iter) => {
+            list.set (iter, Database.JobOrdersListColumns.SELECTED, false);
+
+            return false;
+        });
+        selected_items_num = 0;
+    }
+
     public async void load_job_orders () {
         debug ("Request loading of job orders");
 
