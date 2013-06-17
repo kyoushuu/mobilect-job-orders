@@ -24,6 +24,8 @@ using Mpcw;
 
 public class Mpcjo.JobOrderListView : View {
 
+    public Database database { public get; private set; }
+
     private ListStore? _list;
     public ListStore? list {
         get {
@@ -168,6 +170,22 @@ public class Mpcjo.JobOrderListView : View {
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
+    }
+
+    public JobOrderListView (Database database) {
+        this.database = database;
+        /* Load job orders */
+        load_job_orders.begin ((obj, res) => {
+        });
+    }
+
+    public async void load_job_orders () {
+        debug ("Request loading of job orders");
+
+        list = database.create_job_orders_list ();
+        database.load_job_orders_to_model.begin (list);
+
+        debug ("Request to load job orders succeeded");
     }
 
     [CCode (instance_pos = -1)]
