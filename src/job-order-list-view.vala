@@ -20,6 +20,7 @@
 
 using Gtk;
 using Gda;
+using Gd;
 using Mpcw;
 
 public class Mpcjo.JobOrderListView : View {
@@ -49,6 +50,7 @@ public class Mpcjo.JobOrderListView : View {
 
     public signal void job_order_selected (int id);
 
+    private JobOrderEditor jobordereditor;
     private Overlay overlay;
     private TreeView treeview;
 
@@ -188,6 +190,18 @@ public class Mpcjo.JobOrderListView : View {
         debug ("Request to load job orders succeeded");
     }
 
+    private void create_editor () {
+        jobordereditor = new JobOrderEditor (database);
+        jobordereditor.closed.connect (() => {
+            /* FIXME: Lessen loading here */
+            load_job_orders.begin ((obj, res) => {
+                load_job_orders.end (res);
+            });
+        });
+        jobordereditor.show ();
+        stack.push (jobordereditor);
+    }
+
     [CCode (instance_pos = -1)]
     public void on_treeview_row_activated (TreeView tree_view,
                                            TreePath path,
@@ -201,6 +215,8 @@ public class Mpcjo.JobOrderListView : View {
             int id;
             list.get (iter, Database.JobOrdersListColumns.ID, out id);
 
+            create_editor ();
+            jobordereditor.edit.begin (id);
             job_order_selected (id);
         }
     }
