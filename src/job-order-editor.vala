@@ -78,6 +78,14 @@ public class Mpcjo.JobOrderEditor : StackPage {
         this.database = database;
     }
 
+    public override void close () {
+        save.begin ((obj, res) => {
+            if (save.end (res)) {
+                base.close ();
+            }
+        });
+    }
+
     private bool check_fields () {
         if (database == null) {
             return false;
