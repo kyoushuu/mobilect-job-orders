@@ -175,6 +175,13 @@ public class Mpcjo.JobOrderListView : View {
                 }
             });
 
+            /* Clear selection when selection mode is disabled */
+            notify["selection-mode-enabled"].connect (() => {
+                if (selection_mode_enabled == false) {
+                    select_none ();
+                }
+            });
+
             /* Show select column if select is active */
             bind_property ("selection-mode-enabled", treeviewcolumn_selected, "visible",
                            BindingFlags.SYNC_CREATE);
@@ -246,7 +253,7 @@ public class Mpcjo.JobOrderListView : View {
             sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
             filter.convert_iter_to_child_iter (out iter, filter_iter);
 
-            if (selection_mode) {
+            if (selection_mode_enabled) {
                 bool selected;
                 list.get (iter, Database.JobOrdersListColumns.SELECTED, out selected);
 
