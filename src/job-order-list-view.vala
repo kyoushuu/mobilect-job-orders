@@ -197,6 +197,11 @@ public class Mpcjo.JobOrderListView : View {
         });
     }
 
+    public override void new_activated () {
+        create_editor ();
+        jobordereditor.create_new.begin ();
+    }
+
     public void select_all () {
         if (list == null)
             return;
