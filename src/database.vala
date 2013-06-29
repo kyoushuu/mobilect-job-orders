@@ -45,6 +45,15 @@ public class Database : Object {
         NUM
     }
 
+    public enum PurchaseOrdersListColumns {
+        ID,
+        REF_NUM,
+        DATE,
+        VISIBLE,
+        SELECTED,
+        NUM
+    }
+
     public Connection cnc;
     public DataHandler dh_string;
 
@@ -316,6 +325,90 @@ public class Database : Object {
         }
 
         debug ("Queued loading of customers");
+
+        return true;
+    }
+
+    public ListStore create_purchase_orders_list () {
+        return new ListStore (PurchaseOrdersListColumns.NUM,
+                              typeof (int), typeof (int),        /* ID and Purchase order ref. num. */
+                              typeof (string),                   /* Date */
+                              typeof (bool), typeof (bool));     /* Visible and selected */
+    }
+
+    public async bool load_purchase_orders_to_model (ListStore model) throws Error {
+        SourceFunc callback = load_purchase_orders_to_model.callback;
+
+        debug ("Queue loading of purchase orders");
+
+        ThreadFunc<Error?> run = () => {
+            DataModel dm = null;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("SELECT" +
+                                                 " id, ref_number," +
+                                                 " date " +
+                                                 "FROM purchase_orders",
+                                                 null);
+                dm = cnc.statement_execute_select (stmt, null);
+            } catch (Error e) {
+                warning ("Failed to get purchase orders: %s", e.message);
+
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            if (dm == null) {
+                /* FIXME: Should throw an error here */
+                Idle.add((owned) callback);
+                return null;
+            }
+
+            debug ("Got data model of purchase orders");
+
+            var iter = dm.create_iter ();
+            while (iter.move_next ()) {
+                Value? column;
+                int i = 0;
+
+                var id = (int) iter.get_value_at (i++);
+                var po_number = (int) iter.get_value_at (i++);
+
+                column = iter.get_value_at (i++);
+                var date_po = dh_string.get_str_from_value (column);
+
+                debug ("Queued insertion of purchase order with id number %d to tree model", id);
+                Idle.add (() => {
+                    model.insert_with_values (null, -1,
+                                              PurchaseOrdersListColumns.ID, id,
+                                              PurchaseOrdersListColumns.REF_NUM, po_number,
+                                              PurchaseOrdersListColumns.DATE, date_po,
+                                              PurchaseOrdersListColumns.VISIBLE, true,
+                                              PurchaseOrdersListColumns.SELECTED, false);
+
+                    debug ("Inserted purchase order with id number %d to tree model", id);
+
+                    return false;
+                });
+            }
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("lpo", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued loading of purchase orders");
 
         return true;
     }
