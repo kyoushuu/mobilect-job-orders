@@ -154,6 +154,41 @@ public class Mpcjo.PurchaseOrderListView : View {
         }
     }
 
+    public int get_selected_item (out int ref_num) {
+        TreeIter? iter_selected = null;
+
+        ref_num = 0;
+        if (list == null)
+            return 0;
+
+        list.foreach ((model, path, iter) => {
+            int id;
+            bool selected;
+
+            list.get (iter,
+                      Database.PurchaseOrdersListColumns.ID, out id,
+                      Database.PurchaseOrdersListColumns.SELECTED, out selected);
+
+            if (selected) {
+                iter_selected = iter;
+            }
+
+            return selected;
+        });
+
+        if (iter_selected != null) {
+            int id;
+
+            list.get (iter_selected,
+                      Database.PurchaseOrdersListColumns.ID, out id,
+                      Database.PurchaseOrdersListColumns.REF_NUM, out ref_num);
+
+            return id;
+        } else {
+            return 0;
+        }
+    }
+
     public void select_all () {
         if (list == null)
             return;
