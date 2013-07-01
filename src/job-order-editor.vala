@@ -39,6 +39,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
     private Entry entry_jo_address;
     private DateEntry entry_jo_date_start;
     private DateEntry entry_jo_date_end;
+    private Button button_jo_purchase_order;
 
     private CellAreaBox cellareabox_jo_customer;
     private CellRendererText cellrenderertext_name;
@@ -65,6 +66,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
             entry_jo_address = builder.get_object ("entry_jo_address") as Entry;
             entry_jo_date_start = builder.get_object ("entry_jo_date_start") as DateEntry;
             entry_jo_date_end = builder.get_object ("entry_jo_date_end") as DateEntry;
+            button_jo_purchase_order = builder.get_object ("button_jo_purchase_order") as Button;
 
             cellareabox_jo_customer = builder.get_object ("cellareabox_jo_customer") as CellAreaBox;
             cellrenderertext_name = builder.get_object ("cellrenderertext_name") as CellRendererText;
@@ -109,6 +111,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
         entry_jo_address.text = "";
         entry_jo_date_start.entry.text = "";
         entry_jo_date_end.entry.text = "";
+        button_jo_purchase_order.label = _("None");
 
         customers = database.create_customers_list ();
         yield database.load_customers_to_model (customers);
@@ -157,9 +160,10 @@ public class Mpcjo.JobOrderEditor : StackPage {
                                       " description," +
                                       " customers.id, customers.name, job_orders.address," +
                                       " date_start, date_end," +
-                                      " purchase_order " +
+                                      " purchase_orders.id, purchase_orders.ref_number " +
                                       "FROM job_orders " +
                                       "LEFT JOIN customers ON (job_orders.customer = customers.id) " +
+                                      "LEFT JOIN purchase_orders ON (job_orders.purchase_order = purchase_orders.id) " +
                                       "WHERE job_orders.id=##id::int",
                                       out stmt_params);
 
@@ -231,6 +235,8 @@ public class Mpcjo.JobOrderEditor : StackPage {
                              (int) column : 0);
                 }
 
+                var po_number = (int) iter.get_value_at (9);
+
                 Idle.add (() => {
                     spinbutton_jo_refnum.value = jo_number;
                     entry_jo_desc.text = description;
@@ -238,6 +244,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
                     entry_jo_address.text = address;
                     entry_jo_date_start.entry.text = date_start;
                     entry_jo_date_end.entry.text = date_end;
+                    button_jo_purchase_order.label = _("P.O. #%d").printf (po_number);
 
                     debug ("Finished loading of job order data");
 
@@ -393,6 +400,15 @@ public class Mpcjo.JobOrderEditor : StackPage {
                            Database.CustomersListColumns.ADDRESS, out address);
             entry_jo_address.text = address;
         }
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_button_jo_purchase_order_clicked (Button button) {
+        var listview = new PurchaseOrderListView (database);
+        listview.closed.connect (() => {
+        });
+        listview.show ();
+        stack.push (listview);
     }
 
 }
