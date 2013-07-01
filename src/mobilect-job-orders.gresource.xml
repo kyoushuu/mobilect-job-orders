@@ -5,5 +5,6 @@
     <file preprocess="xml-stripblanks">job-order-list-view.ui</file>
     <file preprocess="xml-stripblanks">job-order-editor.ui</file>
     <file preprocess="xml-stripblanks">purchase-order-list-view.ui</file>
+    <file preprocess="xml-stripblanks">purchase-order-editor.ui</file>
   </gresource>
 </gresources>
