@@ -406,6 +406,12 @@ public class Mpcjo.JobOrderEditor : StackPage {
     public void on_button_jo_purchase_order_clicked (Button button) {
         var listview = new PurchaseOrderListView (database);
         listview.closed.connect (() => {
+            lock (po_id) {
+                int po_number;
+
+                po_id = listview.get_selected_item (out po_number);
+                button_jo_purchase_order.label = _("P.O. #%d").printf (po_number);
+            }
         });
         listview.show ();
         stack.push (listview);

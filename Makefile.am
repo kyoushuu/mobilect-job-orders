@@ -6,6 +6,7 @@ NULL =
 
 SUBDIRS = \
 	libgd \
+	egg-list-box \
 	vapi \
 	src \
 	po \
