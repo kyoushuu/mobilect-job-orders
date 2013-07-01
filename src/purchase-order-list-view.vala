@@ -148,6 +148,12 @@ public class Mpcjo.PurchaseOrderListView : View {
         purchaseordereditor.create_new.begin ();
     }
 
+    public override void close () {
+        if (selection_mode_enabled && selected_items_num == 1) {
+            base.close ();
+        }
+    }
+
     public void select_all () {
         if (list == null)
             return;
