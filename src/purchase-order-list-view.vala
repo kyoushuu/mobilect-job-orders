@@ -53,6 +53,7 @@ public class Mpcjo.PurchaseOrderListView : View {
 
     public signal void purchase_order_selected (int id);
 
+    private PurchaseOrderEditor purchaseordereditor;
     private Overlay overlay;
     private TreeView treeview;
 
@@ -143,6 +144,8 @@ public class Mpcjo.PurchaseOrderListView : View {
     }
 
     public override void new_activated () {
+        create_editor ();
+        purchaseordereditor.create_new.begin ();
     }
 
     public void select_all () {
@@ -179,6 +182,18 @@ public class Mpcjo.PurchaseOrderListView : View {
         debug ("Request to load purchase orders succeeded");
     }
 
+    private void create_editor () {
+        purchaseordereditor = new PurchaseOrderEditor (database);
+        purchaseordereditor.closed.connect (() => {
+            /* FIXME: Lessen loading here */
+            load_purchase_orders.begin ((obj, res) => {
+                load_purchase_orders.end (res);
+            });
+        });
+        purchaseordereditor.show ();
+        stack.push (purchaseordereditor);
+    }
+
     [CCode (instance_pos = -1)]
     public void on_treeview_row_activated (TreeView tree_view,
                                            TreePath path,
@@ -205,6 +220,8 @@ public class Mpcjo.PurchaseOrderListView : View {
                 int id;
                 list.get (iter, Database.PurchaseOrdersListColumns.ID, out id);
 
+                create_editor ();
+                purchaseordereditor.edit.begin (id);
                 purchase_order_selected (id);
             }
         }
