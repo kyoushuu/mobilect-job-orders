@@ -9,6 +9,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
+	-I$(top_srcdir)/egg-list-box \
 	-I$(top_srcdir)/libgd \
 	$(GTK_CFLAGS) \
 	$(GDA_CFLAGS) \
@@ -36,10 +37,12 @@ mobilect_job_orders_SOURCES = \
 
 mobilect_job_orders_VALAFLAGS = \
 	--vapidir=$(top_builddir)/vapi \
+	--vapidir=$(top_builddir)/egg-list-box \
 	--vapidir=$(top_builddir)/libgd \
 	--vapidir=$(MOBILECT_WIDGETS_VAPIDIR) \
 	--pkg=gtk+-3.0 \
 	--pkg=libgda-5.0 \
+	--pkg=egglistbox \
 	--pkg=gd-1.0 \
 	--pkg=mobilect-widgets-1.0 \
 	--thread \
@@ -56,6 +59,7 @@ mobilect_job_orders_LDADD = \
 	$(GTK_LIBS) \
 	$(GDA_LIBS) \
 	$(MOBILECT_WIDGETS_LIBS) \
+	$(top_builddir)/egg-list-box/libegglistbox.la \
 	$(top_builddir)/libgd/libgd.la \
 	$(NULL)
 
