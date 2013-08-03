@@ -66,6 +66,10 @@ public class Mpcjo.JobOrderListView : View {
     private CellRendererText cellrenderertext_date;
     private TreeViewColumn treeviewcolumn_purchase_order;
     private CellRendererText cellrenderertext_purchase_order_number;
+    private TreeViewColumn treeviewcolumn_invoice;
+    private CellRendererText cellrenderertext_invoice_number;
+    private TreeViewColumn treeviewcolumn_payment;
+    private CellRendererText cellrenderertext_payment;
 
     private TreeModelFilter filter;
     private TreeModelSort sort;
@@ -90,6 +94,10 @@ public class Mpcjo.JobOrderListView : View {
             cellrenderertext_date = builder.get_object ("cellrenderertext_date") as CellRendererText;
             treeviewcolumn_purchase_order = builder.get_object ("treeviewcolumn_purchase_order") as TreeViewColumn;
             cellrenderertext_purchase_order_number = builder.get_object ("cellrenderertext_purchase_order_number") as CellRendererText;
+            treeviewcolumn_invoice = builder.get_object ("treeviewcolumn_invoice") as TreeViewColumn;
+            cellrenderertext_invoice_number = builder.get_object ("cellrenderertext_invoice_number") as CellRendererText;
+            treeviewcolumn_payment = builder.get_object ("treeviewcolumn_payment") as TreeViewColumn;
+            cellrenderertext_payment = builder.get_object ("cellrenderertext_payment") as CellRendererText;
 
             treeviewcolumn_job_order.set_cell_data_func (cellrenderertext_job_order_number, (column, cell, model, sort_iter) => {
                 TreeIter filter_iter, iter;
@@ -172,6 +180,56 @@ public class Mpcjo.JobOrderListView : View {
                         .printf (refnum, (string) s);
                 } else {
                     cellrenderertext_purchase_order_number.markup = null;
+                }
+            });
+
+            treeviewcolumn_invoice.set_cell_data_func (cellrenderertext_invoice_number, (column, cell, model, sort_iter) => {
+                TreeIter filter_iter, iter;
+                int refnum;
+                string date_string;
+
+                sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
+                filter.convert_iter_to_child_iter (out iter, filter_iter);
+
+                list.get (iter, Database.JobOrdersListColumns.INVOICE_REF_NUM, out refnum);
+                list.get (iter, Database.JobOrdersListColumns.INVOICE_DATE, out date_string);
+
+                if (refnum > 0) {
+                    var date = Date ();
+                    char s[64];
+
+                    date.set_parse (date_string);
+                    date.strftime (s, "%a, %d %b, %Y");
+
+                    cellrenderertext_invoice_number.markup =
+                        ("<span color=\"#000000000000\">Invoice #%d</span>\n" +
+                         "<span color=\"#88888a8a8585\">%s</span>")
+                        .printf (refnum, (string) s);
+                } else {
+                    cellrenderertext_invoice_number.markup = null;
+                }
+            });
+
+            treeviewcolumn_payment.set_cell_data_func (cellrenderertext_payment, (column, cell, model, sort_iter) => {
+                TreeIter filter_iter, iter;
+                string date_string;
+                var date = Date ();
+                char s[64];
+
+                sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
+                filter.convert_iter_to_child_iter (out iter, filter_iter);
+
+                list.get (iter, Database.JobOrdersListColumns.PAYMENT_DATE, out date_string);
+
+                if (date_string != null && date_string != "") {
+                    date.set_parse (date_string);
+                    date.strftime (s, "%a, %d %b, %Y");
+                    cellrenderertext_payment.markup =
+                        ("<span color=\"#000000000000\">Paid</span>\n" +
+                         "<span color=\"#88888a8a8585\">%s</span>")
+                        .printf ((string) s);
+                } else {
+                    cellrenderertext_payment.markup = null;
                 }
             });
 
