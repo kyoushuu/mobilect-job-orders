@@ -33,6 +33,9 @@ public class Database : Object {
         DATE_END,
         PURCHASE_ORDER_REF_NUM,
         PURCHASE_ORDER_DATE,
+        INVOICE_REF_NUM,
+        INVOICE_DATE,
+        PAYMENT_DATE,
         VISIBLE,
         SELECTED,
         NUM
@@ -49,6 +52,17 @@ public class Database : Object {
         ID,
         REF_NUM,
         DATE,
+        VISIBLE,
+        SELECTED,
+        NUM
+    }
+
+    public enum InvoicesListColumns {
+        ID,
+        REF_NUM,
+        DATE,
+        PAYMENT_DATE,
+        REMARKS,
         VISIBLE,
         SELECTED,
         NUM
@@ -102,6 +116,22 @@ public class Database : Object {
                              "  ref_number integer not null," +
                              "  date string not null" +
                              ")");
+
+                /* Create invoices table if doesn't exists */
+                execute_sql ("CREATE TABLE IF NOT EXISTS invoices (" +
+                             "  id integer primary key autoincrement," +
+                             "  ref_number integer not null," +
+                             "  date string not null," +
+                             "  payment_date string," +
+                             "  remarks string" +
+                             ")");
+
+                /* Create mapping table if doesn't exists */
+                execute_sql ("CREATE TABLE IF NOT EXISTS mapping (" +
+                             "  id integer primary key autoincrement," +
+                             "  purchase_order integer not null," +
+                             "  invoice integer not null" +
+                             ")");
             } catch (Error e) {
                 Idle.add((owned) callback);
                 return e;
@@ -136,6 +166,8 @@ public class Database : Object {
                               typeof (string), typeof (string),  /* Customer and address */
                               typeof (string), typeof (string),  /* Start and end date */
                               typeof (int), typeof (string),     /* Purchase order */
+                              typeof (int), typeof (string),     /* Invoice order */
+                              typeof (string),                   /* Payment date */
                               typeof (bool), typeof (bool));     /* Visible and selected */
     }
 
@@ -155,10 +187,14 @@ public class Database : Object {
                                                  " description," +
                                                  " customers.name, job_orders.address," +
                                                  " date_start, date_end," +
-                                                 " purchase_orders.ref_number, purchase_orders.date " +
+                                                 " purchase_orders.ref_number, purchase_orders.date," +
+                                                 " invoices.ref_number, invoices.date," +
+                                                 " invoices.payment_date " +
                                                  "FROM job_orders " +
                                                  "LEFT JOIN customers ON (job_orders.customer = customers.id) " +
-                                                 "LEFT JOIN purchase_orders ON (job_orders.purchase_order = purchase_orders.id)",
+                                                 "LEFT JOIN purchase_orders ON (job_orders.purchase_order = purchase_orders.id) " +
+                                                 "LEFT JOIN mapping ON (mapping.purchase_order = purchase_orders.id) " +
+                                                 "LEFT JOIN invoices ON (mapping.invoice = invoices.id)",
                                                  null);
                 dm = cnc.statement_execute_select (stmt, null);
             } catch (Error e) {
@@ -208,6 +244,16 @@ public class Database : Object {
                 column = iter.get_value_at (i++);
                 var date_po = dh_string.get_str_from_value (column);
 
+                column = iter.get_value_at (i++);
+                var in_number = (!column.holds (typeof (Null))?
+                                 (int) column : 0);
+
+                column = iter.get_value_at (i++);
+                var date_in = dh_string.get_str_from_value (column);
+
+                column = iter.get_value_at (i++);
+                var date_paid = dh_string.get_str_from_value (column);
+
                 debug ("Queued insertion of job order with id number %d to tree model", id);
                 Idle.add (() => {
                     model.insert_with_values (null, -1,
@@ -220,6 +266,9 @@ public class Database : Object {
                                               JobOrdersListColumns.DATE_END, date_end,
                                               JobOrdersListColumns.PURCHASE_ORDER_REF_NUM, po_number,
                                               JobOrdersListColumns.PURCHASE_ORDER_DATE, date_po,
+                                              JobOrdersListColumns.INVOICE_REF_NUM, in_number,
+                                              JobOrdersListColumns.INVOICE_DATE, date_in,
+                                              JobOrdersListColumns.PAYMENT_DATE, date_paid,
                                               JobOrdersListColumns.VISIBLE, true,
                                               JobOrdersListColumns.SELECTED, false);
 
@@ -409,6 +458,100 @@ public class Database : Object {
         }
 
         debug ("Queued loading of purchase orders");
+
+        return true;
+    }
+
+    public ListStore create_invoices_list () {
+        return new ListStore (InvoicesListColumns.NUM,
+                              typeof (int), typeof (int),        /* ID and Invoice ref. num. */
+                              typeof (string), typeof (string),  /* Date and payment date */
+                              typeof (string),                   /* Remarks */
+                              typeof (bool), typeof (bool));     /* Visible and selected */
+    }
+
+    public async bool load_invoices_to_model (ListStore model) throws Error {
+        SourceFunc callback = load_invoices_to_model.callback;
+
+        debug ("Queue loading of invoices");
+
+        ThreadFunc<Error?> run = () => {
+            DataModel dm = null;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("SELECT" +
+                                                 " id, ref_number," +
+                                                 " date, payment_date," +
+                                                 " remarks " +
+                                                 "FROM invoices",
+                                                 null);
+                dm = cnc.statement_execute_select (stmt, null);
+            } catch (Error e) {
+                warning ("Failed to get invoices: %s", e.message);
+
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            if (dm == null) {
+                /* FIXME: Should throw an error here */
+                Idle.add((owned) callback);
+                return null;
+            }
+
+            debug ("Got data model of invoices");
+
+            var iter = dm.create_iter ();
+            while (iter.move_next ()) {
+                Value? column;
+                int i = 0;
+
+                var id = (int) iter.get_value_at (i++);
+                var in_number = (int) iter.get_value_at (i++);
+
+                column = iter.get_value_at (i++);
+                var date_in = dh_string.get_str_from_value (column);
+
+                column = iter.get_value_at (i++);
+                var date_in_paid = dh_string.get_str_from_value (column);
+
+                column = iter.get_value_at (i++);
+                var remarks = dh_string.get_str_from_value (column);
+
+                debug ("Queued insertion of invoice with id number %d to tree model", id);
+                Idle.add (() => {
+                    model.insert_with_values (null, -1,
+                                              InvoicesListColumns.ID, id,
+                                              InvoicesListColumns.REF_NUM, in_number,
+                                              InvoicesListColumns.DATE, date_in,
+                                              InvoicesListColumns.PAYMENT_DATE, date_in_paid,
+                                              InvoicesListColumns.REMARKS, remarks,
+                                              InvoicesListColumns.VISIBLE, true,
+                                              InvoicesListColumns.SELECTED, false);
+
+                    debug ("Inserted invoice with id number %d to tree model", id);
+
+                    return false;
+                });
+            }
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("li", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued loading of invoices");
 
         return true;
     }
@@ -903,6 +1046,170 @@ public class Database : Object {
         }
 
         debug ("Queued removal of purchase order with id number %d", po_id);
+
+        return true;
+    }
+
+    public async int create_invoice (int refnum, string date, string payment_date, string remarks) throws Error {
+        SourceFunc callback = create_invoice.callback;
+        int invoice_id = 0;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params, last_insert_row;
+            Value? value_in_ref_number;
+
+            debug ("Queue creation of invoice with reference number %d", refnum);
+
+            value_in_ref_number = refnum;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("INSERT INTO invoices (" +
+                                                 " ref_number," +
+                                                 " date," +
+                                                 " payment_date," +
+                                                 " remarks" +
+                                                 ") VALUES (" +
+                                                 " ##ref_number::int," +
+                                                 " ##date::string::null," +
+                                                 " ##payment_date::string::null," +
+                                                 " ##remarks::string::null" +
+                                                 ")",
+                                                 out stmt_params);
+
+                stmt_params.get_holder ("ref_number").set_value (value_in_ref_number);
+                stmt_params.get_holder ("date").set_value_str (null, date);
+                stmt_params.get_holder ("payment_date").set_value_str (null, payment_date);
+                stmt_params.get_holder ("remarks").set_value_str (null, remarks);
+                cnc.statement_execute_non_select (stmt, stmt_params, out last_insert_row);
+
+                if (last_insert_row != null) {
+                    invoice_id = last_insert_row.get_holder_value ("+0").get_int ();
+                } else {
+                    /* FIXME: Get row here */
+                }
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Invoice with reference number %d successfully created", refnum);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("ci", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued creation of invoice with reference number %d", refnum);
+
+        return invoice_id;
+    }
+
+    public async bool update_invoice (int invoice_id, int refnum, string date, string payment_date, string remarks) throws Error {
+        SourceFunc callback = update_invoice.callback;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+            Value? value_in_id, value_in_ref_number;
+
+            debug ("Queue update of invoice with reference number %d", refnum);
+
+            value_in_id = invoice_id;
+            value_in_ref_number = refnum;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("UPDATE invoices " +
+                                                 "SET " +
+                                                 " ref_number=##ref_number::int," +
+                                                 " date=##date::string," +
+                                                 " payment_date=##payment_date::string::null," +
+                                                 " remarks=##remarks::string::null " +
+                                                 "WHERE id=##id::int",
+                                                 out stmt_params);
+                stmt_params.get_holder ("id").set_value (value_in_id);
+                stmt_params.get_holder ("ref_number").set_value (value_in_ref_number);
+                stmt_params.get_holder ("date").set_value_str (null, date);
+                stmt_params.get_holder ("payment_date").set_value_str (null, payment_date);
+                stmt_params.get_holder ("remarks").set_value_str (null, remarks);
+                cnc.statement_execute_non_select (stmt, stmt_params, null);
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Invoice with reference number %d successfully updated", refnum);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("ui", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued update of invoice with reference number %d", refnum);
+
+        return true;
+    }
+
+    public async bool remove_invoice (int invoice_id) throws Error {
+        SourceFunc callback = remove_invoice.callback;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+            Value? value_in_id;
+
+            debug ("Queue removal of invoice with id number %d", invoice_id);
+
+            value_in_id = invoice_id;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("DELETE FROM invoices WHERE id=##id::int",
+                                                 out stmt_params);
+                stmt_params.get_holder ("id").set_value (value_in_id);
+                cnc.statement_execute_non_select (stmt, stmt_params, null);
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Invoice with id number %d successfully removed", invoice_id);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("ri", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued removal of invoice with id number %d", invoice_id);
 
         return true;
     }

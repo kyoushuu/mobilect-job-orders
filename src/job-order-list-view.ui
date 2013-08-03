@@ -33,7 +33,7 @@
                 <child>
                   <object class="GtkCellRendererToggle" id="cellrenderertoggle_selected"/>
                   <attributes>
-                    <attribute name="active">10</attribute>
+                    <attribute name="active">13</attribute>
                   </attributes>
                 </child>
               </object>
