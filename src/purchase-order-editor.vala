@@ -20,6 +20,7 @@
 
 using Gtk;
 using Gda;
+using Egg;
 using Mpcw;
 
 public class Mpcjo.PurchaseOrderEditor : StackPage {
@@ -31,9 +32,11 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
     private SpinButton spinbutton_po_refnum;
     private DateEntry entry_po_date;
+    private Egg.ListBox listbox_po_invoices;
 
     construct {
         try {
+            typeof (Egg.ListBox);
             var builder = new Builder ();
             builder.add_from_resource ("/com/mobilectpower/JobOrders/purchase-order-editor.ui");
             builder.connect_signals (this);
@@ -45,6 +48,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
             spinbutton_po_refnum = builder.get_object ("spinbutton_po_refnum") as SpinButton;
             entry_po_date = builder.get_object ("entry_po_date") as DateEntry;
+            listbox_po_invoices = builder.get_object ("listbox_po_invoices") as Egg.ListBox;
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -257,6 +261,25 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
         }
 
         return ret;
+    }
+
+    [CCode (instance_pos = -1)]
+    public void toolbutton_in_add_clicked (ToolButton toolbutton) {
+        var listview = new InvoiceListView (database);
+        listview.closed.connect (() => {
+            int in_number;
+
+            int in_id = listview.get_selected_item (out in_number);
+            var label = new Label (_("Invoice #%d").printf (in_number));
+            listbox_po_invoices.add (label);
+            label.show ();
+        });
+        listview.show ();
+        stack.push (listview);
+    }
+
+    [CCode (instance_pos = -1)]
+    public void toolbutton_in_remove_clicked (ToolButton toolbutton) {
     }
 
 }
