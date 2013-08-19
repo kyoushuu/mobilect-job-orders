@@ -1214,4 +1214,131 @@ public class Database : Object {
         return true;
     }
 
+    public async bool create_mapping (int purchase_order_id, int invoice_id) throws Error {
+        SourceFunc callback = create_mapping.callback;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+            Value? value_po_id, value_in_id;
+
+            debug ("Queue creation of mapping of invoice with id number %d to " +
+                   "purchase order with id number %d",
+                   invoice_id, purchase_order_id);
+
+            value_po_id = purchase_order_id;
+            value_in_id = invoice_id;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("SELECT id FROM mapping " +
+                                                 "WHERE " +
+                                                 " purchase_order=##purchase_order::int AND" +
+                                                 " invoice=##invoice::int",
+                                                 out stmt_params);
+                stmt_params.get_holder ("purchase_order").set_value (value_po_id);
+                stmt_params.get_holder ("invoice").set_value (value_in_id);
+
+                var dm = cnc.statement_execute_select (stmt, stmt_params);
+                var iter = dm.create_iter ();
+                if (iter.move_next ()) {
+                    return null;
+                }
+
+                stmt = cnc.parse_sql_string ("INSERT INTO mapping (" +
+                                             " purchase_order," +
+                                             " invoice" +
+                                             ") VALUES (" +
+                                             " ##purchase_order::int," +
+                                             " ##invoice::int" +
+                                             ")",
+                                             out stmt_params);
+                stmt_params.get_holder ("purchase_order").set_value (value_po_id);
+                stmt_params.get_holder ("invoice").set_value (value_in_id);
+                cnc.statement_execute_non_select (stmt, stmt_params, null);
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Mapping of invoice with id number %d to " +
+                   "purchase order with id number %d successfully created",
+                   invoice_id, purchase_order_id);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("mpoi", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued creation of mapping of invoice with id number %d to " +
+               "purchase order with id number %d",
+               invoice_id, purchase_order_id);
+
+        return true;
+    }
+
+    public async bool remove_mapping (int purchase_order_id, int invoice_id) throws Error {
+        SourceFunc callback = remove_mapping.callback;
+
+        ThreadFunc<Error?> run = () => {
+            Gda.Set stmt_params;
+            Value? value_po_id, value_in_id;
+
+            debug ("Queue removal of mapping of invoice with id number %d to " +
+                   "purchase order with id number %d",
+                   invoice_id, purchase_order_id);
+
+            value_po_id = purchase_order_id;
+            value_in_id = invoice_id;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("DELETE FROM mapping " +
+                                                 "WHERE " +
+                                                 " purchase_order=##purchase_order::int AND" +
+                                                 " invoice=##invoice::int",
+                                                 out stmt_params);
+                stmt_params.get_holder ("purchase_order").set_value (value_po_id);
+                stmt_params.get_holder ("invoice").set_value (value_in_id);
+                cnc.statement_execute_non_select (stmt, stmt_params, null);
+            } catch (Error e) {
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            debug ("Mapping of invoice with id number %d to " +
+                   "purchase order with id number %d successfully removed",
+                   invoice_id, purchase_order_id);
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("umpoi", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued removal of mapping of invoice with id number %d to " +
+               "purchase order with id number %d",
+               invoice_id, purchase_order_id);
+
+        return true;
+    }
+
 }
