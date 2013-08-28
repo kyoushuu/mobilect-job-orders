@@ -29,6 +29,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
     public Database database { public get; private set; }
 
     private int po_id;
+    private int[] invoices;
 
     private SpinButton spinbutton_po_refnum;
     private DateEntry entry_po_date;
@@ -184,6 +185,26 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
         if (e != null) {
             throw e;
         }
+
+        var list = database.create_mappings_list ();
+        database.load_mappings_to_model.begin (list, (obj, res) => {
+            list.foreach ((m, p, iter) => {
+                int po_id, in_id, in_number;
+                list.get (iter,
+                          Database.MappingsListColumns.PURCHASE_ORDER_ID, out po_id,
+                          Database.MappingsListColumns.INVOICE_ID, out in_id,
+                          Database.MappingsListColumns.INVOICE_REF_NUM, out in_number);
+
+                if (po_id == id && !(in_id in invoices)) {
+                    var label = new Label (_("Invoice #%d").printf (in_number));
+                    listbox_po_invoices.add (label);
+                    label.show ();
+                    invoices += in_id;
+                }
+
+                return false;
+            });
+        });
 
         return true;
     }
