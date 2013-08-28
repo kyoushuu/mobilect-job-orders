@@ -68,6 +68,14 @@ public class Database : Object {
         NUM
     }
 
+    public enum MappingsListColumns {
+        PURCHASE_ORDER_ID,
+        INVOICE_ID,
+        PURCHASE_ORDER_REF_NUM,
+        INVOICE_REF_NUM,
+        NUM
+    }
+
     public Connection cnc;
     public DataHandler dh_string;
 
@@ -1210,6 +1218,98 @@ public class Database : Object {
         }
 
         debug ("Queued removal of invoice with id number %d", invoice_id);
+
+        return true;
+    }
+
+    public ListStore create_mappings_list () {
+        return new ListStore (MappingsListColumns.NUM,
+                              typeof (int),  /* Purchase order ID */
+                              typeof (int),  /* Purchase order ref. num. */
+                              typeof (int),  /* Invoice ID */
+                              typeof (int)); /* Invoice ref. num. */
+    }
+
+    public async bool load_mappings_to_model (ListStore model) throws Error {
+        SourceFunc callback = load_mappings_to_model.callback;
+
+        debug ("Queue loading of mappings");
+
+        ThreadFunc<Error?> run = () => {
+            DataModel dm = null;
+
+            cnc.lock ();
+
+            try {
+                var stmt = cnc.parse_sql_string ("SELECT" +
+                                                 " mapping.id, " +
+                                                 " mapping.purchase_order, " +
+                                                 " purchase_orders.ref_number, " +
+                                                 " mapping.invoice, " +
+                                                 " invoices.ref_number " +
+                                                 "FROM mapping " +
+                                                 "LEFT JOIN purchase_orders ON (mapping.purchase_order = purchase_orders.id) " +
+                                                 "LEFT JOIN invoices ON (mapping.invoice = invoices.id)",
+                                                 null);
+                dm = cnc.statement_execute_select (stmt, null);
+            } catch (Error e) {
+                warning ("Failed to get mappings: %s", e.message);
+
+                Idle.add((owned) callback);
+                return e;
+            } finally {
+                cnc.unlock ();
+            }
+
+            if (dm == null) {
+                /* FIXME: Should throw an error here */
+                Idle.add((owned) callback);
+                return null;
+            }
+
+            debug ("Got data model of mappings");
+
+            var iter = dm.create_iter ();
+            while (iter.move_next ()) {
+                int i = 0;
+
+                var id = (int) iter.get_value_at (i++);
+
+                var purchase_order = (int) iter.get_value_at (i++);
+
+                var purchase_order_num = (int) iter.get_value_at (i++);
+
+                var invoice = (int) iter.get_value_at (i++);
+
+                var invoice_num = (int) iter.get_value_at (i++);
+
+                debug ("Queued insertion of mapping with id number %d to tree model", id);
+                Idle.add (() => {
+                    model.insert_with_values (null, -1,
+                                              MappingsListColumns.PURCHASE_ORDER_ID, purchase_order,
+                                              MappingsListColumns.PURCHASE_ORDER_REF_NUM, purchase_order_num,
+                                              MappingsListColumns.INVOICE_ID, invoice,
+                                              MappingsListColumns.INVOICE_REF_NUM, invoice_num);
+
+                    debug ("Inserted mapping with id number %d to tree model", id);
+
+                    return false;
+                });
+            }
+
+            Idle.add((owned) callback);
+            return null;
+        };
+        var thread = new Thread<Error?> ("lc", run);
+
+        yield;
+
+        var e = thread.join ();
+        if (e != null) {
+            throw e;
+        }
+
+        debug ("Queued loading of mappings");
 
         return true;
     }
