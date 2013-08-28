@@ -291,9 +291,20 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
             int in_number;
 
             int in_id = listview.get_selected_item (out in_number);
-            var label = new Label (_("Invoice #%d").printf (in_number));
-            listbox_po_invoices.add (label);
-            label.show ();
+            if (!(in_id in invoices)) {
+                database.create_mapping.begin (po_id, in_id, (obj, res) => {
+                    try {
+                        if (database.create_mapping.end (res)) {
+                            var label = new Label (_("Invoice #%d").printf (in_number));
+                            listbox_po_invoices.add (label);
+                            label.show ();
+                            invoices += in_id;
+                        }
+                    } catch (Error e) {
+                        warning ("Failed to map invoice to purchase order: %s", e.message);
+                    }
+                });
+            }
         });
         listview.show ();
         stack.push (listview);
