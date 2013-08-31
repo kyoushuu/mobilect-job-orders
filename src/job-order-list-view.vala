@@ -26,38 +26,11 @@ using Mpcw;
 public class Mpcjo.JobOrderListView : View {
 
     public Database database { public get; private set; }
-    public int selected_items_num { public get; private set; }
-
-    private ListStore? _list;
-    public ListStore? list {
-        get {
-            return _list;
-        }
-        set {
-            if (value != null) {
-                _list = value;
-                filter = new TreeModelFilter (value, null);
-
-                sort = new TreeModelSort.with_model (filter);
-                treeview.model = sort;
-            } else {
-                _list = null;
-                filter = null;
-                sort = null;
-                treeview.model = null;
-            }
-
-            selected_items_num = 0;
-        }
-    }
 
     public signal void job_order_selected (int id);
 
     private JobOrderEditor jobordereditor;
-    private Overlay overlay;
-    private TreeView treeview;
 
-    private TreeViewColumn treeviewcolumn_selected;
     private TreeViewColumn treeviewcolumn_job_order;
     private CellRendererText cellrenderertext_job_order_number;
     private TreeViewColumn treeviewcolumn_customer;
@@ -71,33 +44,35 @@ public class Mpcjo.JobOrderListView : View {
     private TreeViewColumn treeviewcolumn_payment;
     private CellRendererText cellrenderertext_payment;
 
-    private TreeModelFilter filter;
-    private TreeModelSort sort;
-
     construct {
         try {
             var builder = new Builder ();
             builder.add_from_resource ("/com/mobilectpower/JobOrders/job-order-list-view.ui");
             builder.connect_signals (this);
 
-            overlay = builder.get_object ("overlay") as Overlay;
-            add (overlay);
-
-            treeview = builder.get_object ("treeview") as TreeView;
-
-            treeviewcolumn_selected = builder.get_object ("treeviewcolumn_selected") as TreeViewColumn;
             treeviewcolumn_job_order = builder.get_object ("treeviewcolumn_job_order") as TreeViewColumn;
             cellrenderertext_job_order_number = builder.get_object ("cellrenderertext_job_order_number") as CellRendererText;
+            treeview.append_column (treeviewcolumn_job_order);
+
             treeviewcolumn_customer = builder.get_object ("treeviewcolumn_customer") as TreeViewColumn;
             cellrenderertext_customer = builder.get_object ("cellrenderertext_customer") as CellRendererText;
+            treeview.append_column (treeviewcolumn_customer);
+
             treeviewcolumn_date = builder.get_object ("treeviewcolumn_date") as TreeViewColumn;
             cellrenderertext_date = builder.get_object ("cellrenderertext_date") as CellRendererText;
+            treeview.append_column (treeviewcolumn_date);
+
             treeviewcolumn_purchase_order = builder.get_object ("treeviewcolumn_purchase_order") as TreeViewColumn;
             cellrenderertext_purchase_order_number = builder.get_object ("cellrenderertext_purchase_order_number") as CellRendererText;
+            treeview.append_column (treeviewcolumn_purchase_order);
+
             treeviewcolumn_invoice = builder.get_object ("treeviewcolumn_invoice") as TreeViewColumn;
             cellrenderertext_invoice_number = builder.get_object ("cellrenderertext_invoice_number") as CellRendererText;
+            treeview.append_column (treeviewcolumn_invoice);
+
             treeviewcolumn_payment = builder.get_object ("treeviewcolumn_payment") as TreeViewColumn;
             cellrenderertext_payment = builder.get_object ("cellrenderertext_payment") as CellRendererText;
+            treeview.append_column (treeviewcolumn_payment);
 
             treeviewcolumn_job_order.set_cell_data_func (cellrenderertext_job_order_number, (column, cell, model, sort_iter) => {
                 TreeIter filter_iter, iter;
@@ -232,17 +207,6 @@ public class Mpcjo.JobOrderListView : View {
                     cellrenderertext_payment.markup = null;
                 }
             });
-
-            /* Clear selection when selection mode is disabled */
-            notify["selection-mode-enabled"].connect (() => {
-                if (selection_mode_enabled == false) {
-                    select_none ();
-                }
-            });
-
-            /* Show select column if select is active */
-            bind_property ("selection-mode-enabled", treeviewcolumn_selected, "visible",
-                           BindingFlags.SYNC_CREATE);
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -260,29 +224,13 @@ public class Mpcjo.JobOrderListView : View {
         jobordereditor.create_new.begin ();
     }
 
-    public void select_all () {
-        if (list == null)
-            return;
+    public override void item_activated (TreeIter iter) {
+        int id;
+        list.get (iter, Database.JobOrdersListColumns.ID, out id);
 
-        selected_items_num = 0;
-        list.foreach ((model, path, iter) => {
-            list.set (iter, Database.JobOrdersListColumns.SELECTED, true);
-                selected_items_num++;
-
-                return false;
-        });
-    }
-
-    public void select_none () {
-        if (list == null)
-            return;
-
-        list.foreach ((model, path, iter) => {
-            list.set (iter, Database.JobOrdersListColumns.SELECTED, false);
-
-            return false;
-        });
-        selected_items_num = 0;
+        create_editor ();
+        jobordereditor.edit.begin (id);
+        job_order_selected (id);
     }
 
     public async void load_job_orders () {
@@ -304,39 +252,6 @@ public class Mpcjo.JobOrderListView : View {
         });
         jobordereditor.show ();
         stack.push (jobordereditor);
-    }
-
-    [CCode (instance_pos = -1)]
-    public void on_treeview_row_activated (TreeView tree_view,
-                                           TreePath path,
-                                           TreeViewColumn column) {
-        TreeIter sort_iter, filter_iter, iter;
-
-        if (sort.get_iter (out sort_iter, path)) {
-            sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
-            filter.convert_iter_to_child_iter (out iter, filter_iter);
-
-            if (selection_mode_enabled) {
-                bool selected;
-                list.get (iter, Database.JobOrdersListColumns.SELECTED, out selected);
-
-                if (selected) {
-                    selected_items_num--;
-                } else {
-                    selected_items_num++;
-                }
-
-                selected = !selected;
-                list.set (iter, Database.JobOrdersListColumns.SELECTED, selected);
-            } else {
-                int id;
-                list.get (iter, Database.JobOrdersListColumns.ID, out id);
-
-                create_editor ();
-                jobordereditor.edit.begin (id);
-                job_order_selected (id);
-            }
-        }
     }
 
 }
