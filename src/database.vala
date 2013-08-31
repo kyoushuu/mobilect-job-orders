@@ -20,11 +20,12 @@
 
 using Gtk;
 using Gda;
+using Mpcw;
 
 public class Database : Object {
 
     public enum JobOrdersListColumns {
-        ID,
+        ID = View.ModelColumns.NUM,
         REF_NUM,
         DESCRIPTION,
         CUSTOMER,
@@ -36,8 +37,6 @@ public class Database : Object {
         INVOICE_REF_NUM,
         INVOICE_DATE,
         PAYMENT_DATE,
-        VISIBLE,
-        SELECTED,
         NUM
     }
 
@@ -49,22 +48,18 @@ public class Database : Object {
     }
 
     public enum PurchaseOrdersListColumns {
-        ID,
+        ID = View.ModelColumns.NUM,
         REF_NUM,
         DATE,
-        VISIBLE,
-        SELECTED,
         NUM
     }
 
     public enum InvoicesListColumns {
-        ID,
+        ID = View.ModelColumns.NUM,
         REF_NUM,
         DATE,
         PAYMENT_DATE,
         REMARKS,
-        VISIBLE,
-        SELECTED,
         NUM
     }
 
@@ -169,14 +164,14 @@ public class Database : Object {
 
     public ListStore create_job_orders_list () {
         return new ListStore (JobOrdersListColumns.NUM,
+                              typeof (bool), typeof (bool),      /* Visible and selected */
                               typeof (int), typeof (int),        /* ID and Job order ref. num. */
                               typeof (string),                   /* Description */
                               typeof (string), typeof (string),  /* Customer and address */
                               typeof (string), typeof (string),  /* Start and end date */
                               typeof (int), typeof (string),     /* Purchase order */
                               typeof (int), typeof (string),     /* Invoice order */
-                              typeof (string),                   /* Payment date */
-                              typeof (bool), typeof (bool));     /* Visible and selected */
+                              typeof (string));                  /* Payment date */
     }
 
     public async bool load_job_orders_to_model (ListStore model) throws Error {
@@ -277,8 +272,8 @@ public class Database : Object {
                                               JobOrdersListColumns.INVOICE_REF_NUM, in_number,
                                               JobOrdersListColumns.INVOICE_DATE, date_in,
                                               JobOrdersListColumns.PAYMENT_DATE, date_paid,
-                                              JobOrdersListColumns.VISIBLE, true,
-                                              JobOrdersListColumns.SELECTED, false);
+                                              View.ModelColumns.VISIBLE, true,
+                                              View.ModelColumns.SELECTED, false);
 
                     debug ("Inserted job order with id number %d to tree model", id);
 
@@ -388,9 +383,9 @@ public class Database : Object {
 
     public ListStore create_purchase_orders_list () {
         return new ListStore (PurchaseOrdersListColumns.NUM,
+                              typeof (bool), typeof (bool),      /* Visible and selected */
                               typeof (int), typeof (int),        /* ID and Purchase order ref. num. */
-                              typeof (string),                   /* Date */
-                              typeof (bool), typeof (bool));     /* Visible and selected */
+                              typeof (string));                  /* Date */
     }
 
     public async bool load_purchase_orders_to_model (ListStore model) throws Error {
@@ -444,8 +439,8 @@ public class Database : Object {
                                               PurchaseOrdersListColumns.ID, id,
                                               PurchaseOrdersListColumns.REF_NUM, po_number,
                                               PurchaseOrdersListColumns.DATE, date_po,
-                                              PurchaseOrdersListColumns.VISIBLE, true,
-                                              PurchaseOrdersListColumns.SELECTED, false);
+                                              View.ModelColumns.VISIBLE, true,
+                                              View.ModelColumns.SELECTED, false);
 
                     debug ("Inserted purchase order with id number %d to tree model", id);
 
@@ -472,10 +467,10 @@ public class Database : Object {
 
     public ListStore create_invoices_list () {
         return new ListStore (InvoicesListColumns.NUM,
+                              typeof (bool), typeof (bool),      /* Visible and selected */
                               typeof (int), typeof (int),        /* ID and Invoice ref. num. */
                               typeof (string), typeof (string),  /* Date and payment date */
-                              typeof (string),                   /* Remarks */
-                              typeof (bool), typeof (bool));     /* Visible and selected */
+                              typeof (string));                  /* Remarks */
     }
 
     public async bool load_invoices_to_model (ListStore model) throws Error {
@@ -538,8 +533,8 @@ public class Database : Object {
                                               InvoicesListColumns.DATE, date_in,
                                               InvoicesListColumns.PAYMENT_DATE, date_in_paid,
                                               InvoicesListColumns.REMARKS, remarks,
-                                              InvoicesListColumns.VISIBLE, true,
-                                              InvoicesListColumns.SELECTED, false);
+                                              View.ModelColumns.VISIBLE, true,
+                                              View.ModelColumns.SELECTED, false);
 
                     debug ("Inserted invoice with id number %d to tree model", id);
 
