@@ -26,38 +26,11 @@ using Mpcw;
 public class Mpcjo.InvoiceListView : View {
 
     public Database database { public get; private set; }
-    public int selected_items_num { public get; private set; }
-
-    private ListStore? _list;
-    public ListStore? list {
-        get {
-            return _list;
-        }
-        set {
-            if (value != null) {
-                _list = value;
-                filter = new TreeModelFilter (value, null);
-
-                sort = new TreeModelSort.with_model (filter);
-                treeview.model = sort;
-            } else {
-                _list = null;
-                filter = null;
-                sort = null;
-                treeview.model = null;
-            }
-
-            selected_items_num = 0;
-        }
-    }
 
     public signal void invoice_selected (int id);
 
     private InvoiceEditor invoiceeditor;
-    private Overlay overlay;
-    private TreeView treeview;
 
-    private TreeViewColumn treeviewcolumn_selected;
     private TreeViewColumn treeviewcolumn_invoice;
     private CellRendererText cellrenderertext_invoice_number;
     private TreeViewColumn treeviewcolumn_date;
@@ -67,29 +40,27 @@ public class Mpcjo.InvoiceListView : View {
     private TreeViewColumn treeviewcolumn_remarks;
     private CellRendererText cellrenderertext_remarks;
 
-    private TreeModelFilter filter;
-    private TreeModelSort sort;
-
     construct {
         try {
             var builder = new Builder ();
             builder.add_from_resource ("/com/mobilectpower/JobOrders/invoice-list-view.ui");
             builder.connect_signals (this);
 
-            overlay = builder.get_object ("overlay") as Overlay;
-            add (overlay);
-
-            treeview = builder.get_object ("treeview") as TreeView;
-
-            treeviewcolumn_selected = builder.get_object ("treeviewcolumn_selected") as TreeViewColumn;
             treeviewcolumn_invoice = builder.get_object ("treeviewcolumn_invoice") as TreeViewColumn;
             cellrenderertext_invoice_number = builder.get_object ("cellrenderertext_invoice_number") as CellRendererText;
+            treeview.append_column (treeviewcolumn_invoice);
+
             treeviewcolumn_date = builder.get_object ("treeviewcolumn_date") as TreeViewColumn;
             cellrenderertext_date = builder.get_object ("cellrenderertext_date") as CellRendererText;
+            treeview.append_column (treeviewcolumn_date);
+
             treeviewcolumn_payment_date = builder.get_object ("treeviewcolumn_payment_date") as TreeViewColumn;
             cellrenderertext_payment_date = builder.get_object ("cellrenderertext_payment_date") as CellRendererText;
+            treeview.append_column (treeviewcolumn_payment_date);
+
             treeviewcolumn_remarks = builder.get_object ("treeviewcolumn_remarks") as TreeViewColumn;
             cellrenderertext_remarks = builder.get_object ("cellrenderertext_remarks") as CellRendererText;
+            treeview.append_column (treeviewcolumn_remarks);
 
             treeviewcolumn_invoice.set_cell_data_func (cellrenderertext_invoice_number, (column, cell, model, sort_iter) => {
                 TreeIter filter_iter, iter;
@@ -146,17 +117,6 @@ public class Mpcjo.InvoiceListView : View {
                     cellrenderertext_payment_date.markup = null;
                 }
             });
-
-            /* Clear selection when selection mode is disabled */
-            notify["selection-mode-enabled"].connect (() => {
-                if (selection_mode_enabled == false) {
-                    select_none ();
-                }
-            });
-
-            /* Show select column if select is active */
-            bind_property ("selection-mode-enabled", treeviewcolumn_selected, "visible",
-                           BindingFlags.SYNC_CREATE);
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -172,6 +132,15 @@ public class Mpcjo.InvoiceListView : View {
     public override void new_activated () {
         create_editor ();
         invoiceeditor.create_new.begin ();
+    }
+
+    public override void item_activated (TreeIter iter) {
+        int id;
+        list.get (iter, Database.InvoicesListColumns.ID, out id);
+
+        create_editor ();
+        invoiceeditor.edit.begin (id);
+        invoice_selected (id);
     }
 
     public override void close () {
@@ -193,7 +162,7 @@ public class Mpcjo.InvoiceListView : View {
 
             list.get (iter,
                       Database.InvoicesListColumns.ID, out id,
-                      Database.InvoicesListColumns.SELECTED, out selected);
+                      View.ModelColumns.SELECTED, out selected);
 
             if (selected) {
                 iter_selected = iter;
@@ -215,31 +184,6 @@ public class Mpcjo.InvoiceListView : View {
         }
     }
 
-    public void select_all () {
-        if (list == null)
-            return;
-
-        selected_items_num = 0;
-        list.foreach ((model, path, iter) => {
-            list.set (iter, Database.InvoicesListColumns.SELECTED, true);
-                selected_items_num++;
-
-                return false;
-        });
-    }
-
-    public void select_none () {
-        if (list == null)
-            return;
-
-        list.foreach ((model, path, iter) => {
-            list.set (iter, Database.InvoicesListColumns.SELECTED, false);
-
-            return false;
-        });
-        selected_items_num = 0;
-    }
-
     public async void load_invoices () {
         debug ("Request loading of invoices");
 
@@ -259,39 +203,6 @@ public class Mpcjo.InvoiceListView : View {
         });
         invoiceeditor.show ();
         stack.push (invoiceeditor);
-    }
-
-    [CCode (instance_pos = -1)]
-    public void on_treeview_row_activated (TreeView tree_view,
-                                           TreePath path,
-                                           TreeViewColumn column) {
-        TreeIter sort_iter, filter_iter, iter;
-
-        if (sort.get_iter (out sort_iter, path)) {
-            sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
-            filter.convert_iter_to_child_iter (out iter, filter_iter);
-
-            if (selection_mode_enabled) {
-                bool selected;
-                list.get (iter, Database.InvoicesListColumns.SELECTED, out selected);
-
-                if (selected) {
-                    selected_items_num--;
-                } else {
-                    selected_items_num++;
-                }
-
-                selected = !selected;
-                list.set (iter, Database.InvoicesListColumns.SELECTED, selected);
-            } else {
-                int id;
-                list.get (iter, Database.InvoicesListColumns.ID, out id);
-
-                create_editor ();
-                invoiceeditor.edit.begin (id);
-                invoice_selected (id);
-            }
-        }
     }
 
 }
