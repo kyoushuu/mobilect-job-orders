@@ -26,45 +26,15 @@ using Mpcw;
 public class Mpcjo.PurchaseOrderListView : View {
 
     public Database database { public get; private set; }
-    public int selected_items_num { public get; private set; }
-
-    private ListStore? _list;
-    public ListStore? list {
-        get {
-            return _list;
-        }
-        set {
-            if (value != null) {
-                _list = value;
-                filter = new TreeModelFilter (value, null);
-
-                sort = new TreeModelSort.with_model (filter);
-                treeview.model = sort;
-            } else {
-                _list = null;
-                filter = null;
-                sort = null;
-                treeview.model = null;
-            }
-
-            selected_items_num = 0;
-        }
-    }
 
     public signal void purchase_order_selected (int id);
 
     private PurchaseOrderEditor purchaseordereditor;
-    private Overlay overlay;
-    private TreeView treeview;
 
-    private TreeViewColumn treeviewcolumn_selected;
     private TreeViewColumn treeviewcolumn_purchase_order;
     private CellRendererText cellrenderertext_purchase_order_number;
     private TreeViewColumn treeviewcolumn_date;
     private CellRendererText cellrenderertext_date;
-
-    private TreeModelFilter filter;
-    private TreeModelSort sort;
 
     construct {
         try {
@@ -72,18 +42,13 @@ public class Mpcjo.PurchaseOrderListView : View {
             builder.add_from_resource ("/com/mobilectpower/JobOrders/purchase-order-list-view.ui");
             builder.connect_signals (this);
 
-            overlay = builder.get_object ("overlay") as Overlay;
-            add (overlay);
-
-            treeview = builder.get_object ("treeview") as TreeView;
-
-            treeviewcolumn_selected = builder.get_object ("treeviewcolumn_selected") as TreeViewColumn;
             treeviewcolumn_purchase_order = builder.get_object ("treeviewcolumn_purchase_order") as TreeViewColumn;
             cellrenderertext_purchase_order_number = builder.get_object ("cellrenderertext_purchase_order_number") as CellRendererText;
+            treeview.append_column (treeviewcolumn_purchase_order);
+
             treeviewcolumn_date = builder.get_object ("treeviewcolumn_date") as TreeViewColumn;
             cellrenderertext_date = builder.get_object ("cellrenderertext_date") as CellRendererText;
-            treeviewcolumn_purchase_order = builder.get_object ("treeviewcolumn_purchase_order") as TreeViewColumn;
-            cellrenderertext_purchase_order_number = builder.get_object ("cellrenderertext_purchase_order_number") as CellRendererText;
+            treeview.append_column (treeviewcolumn_date);
 
             treeviewcolumn_purchase_order.set_cell_data_func (cellrenderertext_purchase_order_number, (column, cell, model, sort_iter) => {
                 TreeIter filter_iter, iter;
@@ -120,17 +85,6 @@ public class Mpcjo.PurchaseOrderListView : View {
                     cellrenderertext_date.markup = null;
                 }
             });
-
-            /* Clear selection when selection mode is disabled */
-            notify["selection-mode-enabled"].connect (() => {
-                if (selection_mode_enabled == false) {
-                    select_none ();
-                }
-            });
-
-            /* Show select column if select is active */
-            bind_property ("selection-mode-enabled", treeviewcolumn_selected, "visible",
-                           BindingFlags.SYNC_CREATE);
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -146,6 +100,15 @@ public class Mpcjo.PurchaseOrderListView : View {
     public override void new_activated () {
         create_editor ();
         purchaseordereditor.create_new.begin ();
+    }
+
+    public override void item_activated (TreeIter iter) {
+        int id;
+        list.get (iter, Database.PurchaseOrdersListColumns.ID, out id);
+
+        create_editor ();
+        purchaseordereditor.edit.begin (id);
+        purchase_order_selected (id);
     }
 
     public override void close () {
@@ -167,7 +130,7 @@ public class Mpcjo.PurchaseOrderListView : View {
 
             list.get (iter,
                       Database.PurchaseOrdersListColumns.ID, out id,
-                      Database.PurchaseOrdersListColumns.SELECTED, out selected);
+                      View.ModelColumns.SELECTED, out selected);
 
             if (selected) {
                 iter_selected = iter;
@@ -189,31 +152,6 @@ public class Mpcjo.PurchaseOrderListView : View {
         }
     }
 
-    public void select_all () {
-        if (list == null)
-            return;
-
-        selected_items_num = 0;
-        list.foreach ((model, path, iter) => {
-            list.set (iter, Database.PurchaseOrdersListColumns.SELECTED, true);
-                selected_items_num++;
-
-                return false;
-        });
-    }
-
-    public void select_none () {
-        if (list == null)
-            return;
-
-        list.foreach ((model, path, iter) => {
-            list.set (iter, Database.PurchaseOrdersListColumns.SELECTED, false);
-
-            return false;
-        });
-        selected_items_num = 0;
-    }
-
     public async void load_purchase_orders () {
         debug ("Request loading of purchase orders");
 
@@ -233,39 +171,6 @@ public class Mpcjo.PurchaseOrderListView : View {
         });
         purchaseordereditor.show ();
         stack.push (purchaseordereditor);
-    }
-
-    [CCode (instance_pos = -1)]
-    public void on_treeview_row_activated (TreeView tree_view,
-                                           TreePath path,
-                                           TreeViewColumn column) {
-        TreeIter sort_iter, filter_iter, iter;
-
-        if (sort.get_iter (out sort_iter, path)) {
-            sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
-            filter.convert_iter_to_child_iter (out iter, filter_iter);
-
-            if (selection_mode_enabled) {
-                bool selected;
-                list.get (iter, Database.PurchaseOrdersListColumns.SELECTED, out selected);
-
-                if (selected) {
-                    selected_items_num--;
-                } else {
-                    selected_items_num++;
-                }
-
-                selected = !selected;
-                list.set (iter, Database.PurchaseOrdersListColumns.SELECTED, selected);
-            } else {
-                int id;
-                list.get (iter, Database.PurchaseOrdersListColumns.ID, out id);
-
-                create_editor ();
-                purchaseordereditor.edit.begin (id);
-                purchase_order_selected (id);
-            }
-        }
     }
 
 }
