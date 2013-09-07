@@ -99,7 +99,9 @@ public class Mpcjo.PurchaseOrderListView : View {
 
     public override void new_activated () {
         create_editor ();
-        purchaseordereditor.create_new.begin ();
+        purchaseordereditor.create_new.begin ((obj, res) => {
+            base.new_activated ();
+        });
     }
 
     public override void delete_activated () {
