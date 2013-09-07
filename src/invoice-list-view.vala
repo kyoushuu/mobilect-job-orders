@@ -131,7 +131,9 @@ public class Mpcjo.InvoiceListView : View {
 
     public override void new_activated () {
         create_editor ();
-        invoiceeditor.create_new.begin ();
+        invoiceeditor.create_new.begin ((obj, res) => {
+            base.new_activated ();
+        });
     }
 
     public override void delete_activated () {
