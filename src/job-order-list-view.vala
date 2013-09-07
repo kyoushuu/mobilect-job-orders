@@ -221,7 +221,9 @@ public class Mpcjo.JobOrderListView : View {
 
     public override void new_activated () {
         create_editor ();
-        jobordereditor.create_new.begin ();
+        jobordereditor.create_new.begin ((obj, res) => {
+            base.new_activated ();
+        });
     }
 
     public override void delete_activated () {
