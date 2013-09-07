@@ -134,6 +134,20 @@ public class Mpcjo.InvoiceListView : View {
         invoiceeditor.create_new.begin ();
     }
 
+    public override void delete_activated () {
+        int id;
+        var items = new int[0];
+
+        foreach (var iter in get_selected_iters ()) {
+            list.get (iter, Database.InvoicesListColumns.ID, out id);
+            items += id;
+        }
+
+        delete_invoices.begin (items, (obj, res) => {
+            base.delete_activated ();
+        });
+    }
+
     public override void item_activated (TreeIter iter) {
         int id;
         list.get (iter, Database.InvoicesListColumns.ID, out id);
@@ -191,6 +205,34 @@ public class Mpcjo.InvoiceListView : View {
         database.load_invoices_to_model.begin (list);
 
         debug ("Request to load invoices succeeded");
+    }
+
+    private async void delete_invoices (int[] items) {
+        try {
+            database.cnc.lock ();
+            database.cnc.begin_transaction (null, TransactionIsolation.REPEATABLE_READ);
+            database.cnc.unlock ();
+
+            try {
+                foreach (var id in items) {
+                    yield database.remove_invoice (id);
+                }
+
+                database.cnc.lock ();
+                database.cnc.commit_transaction (null);
+                database.cnc.unlock ();
+            } catch (Error e) {
+                database.cnc.lock ();
+                database.cnc.rollback_transaction (null);
+                database.cnc.unlock ();
+
+                /* FIXME: Throw errors here */
+                warning ("Failed to delete invoice: %s", e.message);
+            }
+        } catch (Error e) {
+            /* FIXME: Throw errors here */
+            warning ("Failed to delete invoices: %s", e.message);
+        }
     }
 
     private void create_editor () {
