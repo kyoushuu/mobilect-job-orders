@@ -102,6 +102,20 @@ public class Mpcjo.PurchaseOrderListView : View {
         purchaseordereditor.create_new.begin ();
     }
 
+    public override void delete_activated () {
+        int id;
+        var items = new int[0];
+
+        foreach (var iter in get_selected_iters ()) {
+            list.get (iter, Database.PurchaseOrdersListColumns.ID, out id);
+            items += id;
+        }
+
+        delete_purchase_orders.begin (items, (obj, res) => {
+            base.delete_activated ();
+        });
+    }
+
     public override void item_activated (TreeIter iter) {
         int id;
         list.get (iter, Database.PurchaseOrdersListColumns.ID, out id);
@@ -159,6 +173,34 @@ public class Mpcjo.PurchaseOrderListView : View {
         database.load_purchase_orders_to_model.begin (list);
 
         debug ("Request to load purchase orders succeeded");
+    }
+
+    private async void delete_purchase_orders (int[] items) {
+        try {
+            database.cnc.lock ();
+            database.cnc.begin_transaction (null, TransactionIsolation.REPEATABLE_READ);
+            database.cnc.unlock ();
+
+            try {
+                foreach (var id in items) {
+                    yield database.remove_purchase_order (id);
+                }
+
+                database.cnc.lock ();
+                database.cnc.commit_transaction (null);
+                database.cnc.unlock ();
+            } catch (Error e) {
+                database.cnc.lock ();
+                database.cnc.rollback_transaction (null);
+                database.cnc.unlock ();
+
+                /* FIXME: Throw errors here */
+                warning ("Failed to delete purchase order: %s", e.message);
+            }
+        } catch (Error e) {
+            /* FIXME: Throw errors here */
+            warning ("Failed to delete purchase orders: %s", e.message);
+        }
     }
 
     private void create_editor () {
