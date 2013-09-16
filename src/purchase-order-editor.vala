@@ -287,24 +287,24 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
     [CCode (instance_pos = -1)]
     public void toolbutton_in_add_clicked (ToolButton toolbutton) {
         var listview = new InvoiceListView (database);
-        listview.closed.connect (() => {
-            int in_number;
-
-            int in_id = listview.get_selected_item (out in_number);
-            if (!(in_id in invoices)) {
-                database.create_mapping.begin (po_id, in_id, (obj, res) => {
-                    try {
-                        if (database.create_mapping.end (res)) {
-                            var label = new Label (_("Invoice #%d").printf (in_number));
-                            listbox_po_invoices.add (label);
-                            label.show ();
-                            invoices += in_id;
+        listview.add_activated.connect ((items) => {
+            foreach (var item in items) {
+                if (!(item.id in invoices)) {
+                    database.create_mapping.begin (po_id, item.id, (obj, res) => {
+                        try {
+                            if (database.create_mapping.end (res)) {
+                                var label = new Label (_("Invoice #%d").printf (item.ref_num));
+                                listbox_po_invoices.add (label);
+                                label.show ();
+                                invoices += item.id;
+                            }
+                        } catch (Error e) {
+                            warning ("Failed to map invoice to purchase order: %s", e.message);
                         }
-                    } catch (Error e) {
-                        warning ("Failed to map invoice to purchase order: %s", e.message);
-                    }
-                });
+                    });
+                }
             }
+            stack.pop ();
         });
         listview.show ();
         stack.push (listview);
