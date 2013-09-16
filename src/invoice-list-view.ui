@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.8 -->
+  <object class="GdHeaderSimpleButton" id="button_add">
+    <property name="visible">True</property>
+    <property name="halign">end</property>
+    <property name="label">Add to Purchase Order</property>
+    <signal name="clicked" handler="mpcjo_invoice_list_view_on_button_add_clicked" swapped="no"/>
+  </object>
   <object class="GtkTreeViewColumn" id="treeviewcolumn_invoice">
     <property name="min_width">50</property>
     <property name="title" translatable="yes">Invoice</property>

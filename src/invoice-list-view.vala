@@ -27,9 +27,18 @@ public class Mpcjo.InvoiceListView : View {
 
     public Database database { public get; private set; }
 
+    public struct Item {
+        public int id;
+        public int ref_num;
+    }
+
     public signal void invoice_selected (int id);
 
+    public virtual signal void add_activated (Item[] items) {
+    }
+
     private InvoiceEditor invoiceeditor;
+    private HeaderSimpleButton button_add;
 
     private TreeViewColumn treeviewcolumn_invoice;
     private CellRendererText cellrenderertext_invoice_number;
@@ -45,6 +54,9 @@ public class Mpcjo.InvoiceListView : View {
             var builder = new Builder ();
             builder.add_from_resource ("/com/mobilectpower/JobOrders/invoice-list-view.ui");
             builder.connect_signals (this);
+
+            button_add = builder.get_object ("button_add") as HeaderSimpleButton;
+            toolbar_selection.pack_end (button_add);
 
             treeviewcolumn_invoice = builder.get_object ("treeviewcolumn_invoice") as TreeViewColumn;
             cellrenderertext_invoice_number = builder.get_object ("cellrenderertext_invoice_number") as CellRendererText;
@@ -159,47 +171,6 @@ public class Mpcjo.InvoiceListView : View {
         invoice_selected (id);
     }
 
-    public override void close () {
-        if (selection_mode_enabled && selected_items_num == 1) {
-            base.close ();
-        }
-    }
-
-    public int get_selected_item (out int ref_num) {
-        TreeIter? iter_selected = null;
-
-        ref_num = 0;
-        if (list == null)
-            return 0;
-
-        list.foreach ((model, path, iter) => {
-            int id;
-            bool selected;
-
-            list.get (iter,
-                      Database.InvoicesListColumns.ID, out id,
-                      View.ModelColumns.SELECTED, out selected);
-
-            if (selected) {
-                iter_selected = iter;
-            }
-
-            return selected;
-        });
-
-        if (iter_selected != null) {
-            int id;
-
-            list.get (iter_selected,
-                      Database.InvoicesListColumns.ID, out id,
-                      Database.InvoicesListColumns.REF_NUM, out ref_num);
-
-            return id;
-        } else {
-            return 0;
-        }
-    }
-
     public async void load_invoices () {
         debug ("Request loading of invoices");
 
@@ -247,6 +218,36 @@ public class Mpcjo.InvoiceListView : View {
         });
         invoiceeditor.show ();
         stack.push (invoiceeditor);
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_button_add_clicked (Button button) {
+        var items = new Item[0];
+
+        if (list == null)
+            return;
+
+        list.foreach ((model, path, iter) => {
+            int id, ref_num;
+            bool selected;
+
+            list.get (iter,
+                      Database.InvoicesListColumns.ID, out id,
+                      Database.InvoicesListColumns.REF_NUM, out ref_num,
+                      View.ModelColumns.SELECTED, out selected);
+
+            if (selected) {
+                var item = Item() {
+                    id = id,
+                    ref_num = ref_num
+                };
+                items += item;
+            }
+
+            return false;
+        });
+
+        add_activated (items);
     }
 
 }
