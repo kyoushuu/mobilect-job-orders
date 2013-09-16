@@ -29,7 +29,11 @@ public class Mpcjo.PurchaseOrderListView : View {
 
     public signal void purchase_order_selected (int id);
 
+    public virtual signal void set_activated (int id, int ref_num) {
+    }
+
     private PurchaseOrderEditor purchaseordereditor;
+    private HeaderSimpleButton button_set;
 
     private TreeViewColumn treeviewcolumn_purchase_order;
     private CellRendererText cellrenderertext_purchase_order_number;
@@ -41,6 +45,9 @@ public class Mpcjo.PurchaseOrderListView : View {
             var builder = new Builder ();
             builder.add_from_resource ("/com/mobilectpower/JobOrders/purchase-order-list-view.ui");
             builder.connect_signals (this);
+
+            button_set = builder.get_object ("button_set") as HeaderSimpleButton;
+            toolbar_selection.pack_end (button_set);
 
             treeviewcolumn_purchase_order = builder.get_object ("treeviewcolumn_purchase_order") as TreeViewColumn;
             cellrenderertext_purchase_order_number = builder.get_object ("cellrenderertext_purchase_order_number") as CellRendererText;
@@ -85,6 +92,11 @@ public class Mpcjo.PurchaseOrderListView : View {
                     cellrenderertext_date.markup = null;
                 }
             });
+
+            /* Set as Purchase Order button is sensitive if there is a selected item */
+            bind_property ("selected-items-num", button_set, "sensitive",
+                           BindingFlags.SYNC_CREATE,
+                           this.bind_selected_and_set_button);
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -125,12 +137,6 @@ public class Mpcjo.PurchaseOrderListView : View {
         create_editor ();
         purchaseordereditor.edit.begin (id);
         purchase_order_selected (id);
-    }
-
-    public override void close () {
-        if (selection_mode_enabled && selected_items_num == 1) {
-            base.close ();
-        }
     }
 
     public int get_selected_item (out int ref_num) {
@@ -215,6 +221,40 @@ public class Mpcjo.PurchaseOrderListView : View {
         });
         purchaseordereditor.show ();
         stack.push (purchaseordereditor);
+    }
+
+    private bool bind_selected_and_set_button (Binding binding, Value source, ref Value target) {
+        target = ((int) source == 1);
+
+        return true;
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_button_set_clicked (Button button) {
+        var id = 0;
+        var ref_num = 0;
+
+        if (list == null)
+            return;
+
+        list.foreach ((model, path, iter) => {
+            bool selected;
+
+            list.get (iter,
+                      Database.InvoicesListColumns.ID, out id,
+                      Database.InvoicesListColumns.REF_NUM, out ref_num,
+                      View.ModelColumns.SELECTED, out selected);
+
+            if (selected) {
+                return true;
+            }
+
+            return false;
+        });
+
+        if (id != 0) {
+            set_activated (id, ref_num);
+        }
     }
 
 }
