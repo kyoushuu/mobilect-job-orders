@@ -405,13 +405,20 @@ public class Mpcjo.JobOrderEditor : StackPage {
     [CCode (instance_pos = -1)]
     public void on_button_jo_purchase_order_clicked (Button button) {
         var listview = new PurchaseOrderListView (database);
-        listview.closed.connect (() => {
+        listview.set_activated.connect ((id, ref_num) => {
             lock (po_id) {
-                int po_number;
-
-                po_id = listview.get_selected_item (out po_number);
-                button_jo_purchase_order.label = _("P.O. #%d").printf (po_number);
+                po_id = id;
+                update_job_order.begin ((obj, res) => {
+                    try {
+                        if (update_job_order.end (res)) {
+                            button_jo_purchase_order.label = _("P.O. #%d").printf (ref_num);
+                        }
+                    } catch (Error e) {
+                        warning ("Failed to set purchase order of job order: %s", e.message);
+                    }
+                });
             }
+            stack.pop ();
         });
         listview.show ();
         stack.push (listview);
