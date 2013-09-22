@@ -244,7 +244,16 @@ public class Mpcjo.JobOrderEditor : StackPage {
                     entry_jo_address.text = address;
                     entry_jo_date_start.entry.text = date_start;
                     entry_jo_date_end.entry.text = date_end;
-                    button_jo_purchase_order.label = _("P.O. #%d").printf (po_number);
+
+                    lock (po_id) {
+                        if (po_id == 0) {
+                            button_jo_purchase_order.label = _("None");
+                        } else if (po_number == 0) {
+                            button_jo_purchase_order.label = _("Unreleased");
+                        } else {
+                            button_jo_purchase_order.label = _("P.O. #%d").printf (po_number);
+                        }
+                    }
 
                     debug ("Finished loading of job order data");
 
