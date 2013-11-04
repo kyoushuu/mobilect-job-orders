@@ -248,13 +248,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
                     entry_jo_date_end.entry.text = date_end;
 
                     lock (po_id) {
-                        if (po_id == 0) {
-                            button_jo_purchase_order.label = _("None");
-                        } else if (po_number == 0) {
-                            button_jo_purchase_order.label = _("Unreleased");
-                        } else {
-                            button_jo_purchase_order.label = _("P.O. #%d").printf (po_number);
-                        }
+                        update_purchase_order_button (po_id, po_number);
                     }
 
                     debug ("Finished loading of job order data");
@@ -422,7 +416,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
                 update_job_order.begin ((obj, res) => {
                     try {
                         if (update_job_order.end (res)) {
-                            button_jo_purchase_order.label = _("P.O. #%d").printf (ref_num);
+                            update_purchase_order_button (id, ref_num);
                         }
                     } catch (Error e) {
                         warning ("Failed to set purchase order of job order: %s", e.message);
@@ -433,6 +427,16 @@ public class Mpcjo.JobOrderEditor : StackPage {
         });
         listview.show ();
         stack.push (listview);
+    }
+
+    private void update_purchase_order_button (int id, int ref_num) {
+        if (id == 0) {
+            button_jo_purchase_order.label = _("None");
+        } else if (ref_num == 0) {
+            button_jo_purchase_order.label = _("Unreleased");
+        } else {
+            button_jo_purchase_order.label = _("P.O. #%d").printf (ref_num);
+        }
     }
 
 }
