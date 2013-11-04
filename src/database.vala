@@ -32,8 +32,10 @@ public class Database : Object {
         ADDRESS,
         DATE_START,
         DATE_END,
+        PURCHASE_ORDER_ID,
         PURCHASE_ORDER_REF_NUM,
         PURCHASE_ORDER_DATE,
+        INVOICE_ID,
         INVOICE_REF_NUM,
         INVOICE_DATE,
         PAYMENT_DATE,
@@ -169,8 +171,10 @@ public class Database : Object {
                               typeof (string),                   /* Description */
                               typeof (string), typeof (string),  /* Customer and address */
                               typeof (string), typeof (string),  /* Start and end date */
-                              typeof (int), typeof (string),     /* Purchase order */
-                              typeof (int), typeof (string),     /* Invoice order */
+                              typeof (int),                      /* Purchase order id */
+                              typeof (int), typeof (string),     /* Purchase order ref. num. and date */
+                              typeof (int),                      /* Invoice id */
+                              typeof (int), typeof (string),     /* Invoice ref. num. and date */
                               typeof (string));                  /* Payment date */
     }
 
@@ -190,7 +194,9 @@ public class Database : Object {
                                                  " description," +
                                                  " customers.name, job_orders.address," +
                                                  " date_start, date_end," +
+                                                 " purchase_orders.id," +
                                                  " purchase_orders.ref_number, purchase_orders.date," +
+                                                 " invoices.id," +
                                                  " invoices.ref_number, invoices.date," +
                                                  " invoices.payment_date " +
                                                  "FROM job_orders " +
@@ -241,11 +247,19 @@ public class Database : Object {
                 var date_end = dh_string.get_str_from_value (column);
 
                 column = iter.get_value_at (i++);
+                var po_id = (!column.holds (typeof (Null))?
+                             (int) column : 0);
+
+                column = iter.get_value_at (i++);
                 var po_number = (!column.holds (typeof (Null))?
                                  (int) column : 0);
 
                 column = iter.get_value_at (i++);
                 var date_po = dh_string.get_str_from_value (column);
+
+                column = iter.get_value_at (i++);
+                var in_id = (!column.holds (typeof (Null))?
+                             (int) column : 0);
 
                 column = iter.get_value_at (i++);
                 var in_number = (!column.holds (typeof (Null))?
@@ -267,8 +281,10 @@ public class Database : Object {
                                               JobOrdersListColumns.ADDRESS, address,
                                               JobOrdersListColumns.DATE_START, date_start,
                                               JobOrdersListColumns.DATE_END, date_end,
+                                              JobOrdersListColumns.PURCHASE_ORDER_ID, po_id,
                                               JobOrdersListColumns.PURCHASE_ORDER_REF_NUM, po_number,
                                               JobOrdersListColumns.PURCHASE_ORDER_DATE, date_po,
+                                              JobOrdersListColumns.INVOICE_ID, in_id,
                                               JobOrdersListColumns.INVOICE_REF_NUM, in_number,
                                               JobOrdersListColumns.INVOICE_DATE, date_in,
                                               JobOrdersListColumns.PAYMENT_DATE, date_paid,
