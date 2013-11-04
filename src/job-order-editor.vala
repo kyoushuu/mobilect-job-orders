@@ -235,7 +235,9 @@ public class Mpcjo.JobOrderEditor : StackPage {
                              (int) column : 0);
                 }
 
-                var po_number = (int) iter.get_value_at (9);
+                column = iter.get_value_at (9);
+                var po_number = (!column.holds (typeof (Null))?
+                                 (int) column : 0);
 
                 Idle.add (() => {
                     spinbutton_jo_refnum.value = jo_number;
