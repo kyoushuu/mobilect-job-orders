@@ -133,12 +133,13 @@ public class Mpcjo.JobOrderListView : View {
 
             treeviewcolumn_purchase_order.set_cell_data_func (cellrenderertext_purchase_order_number, (column, cell, model, sort_iter) => {
                 TreeIter filter_iter, iter;
-                int refnum;
+                int id, refnum;
                 string date_string;
 
                 sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
                 filter.convert_iter_to_child_iter (out iter, filter_iter);
 
+                list.get (iter, Database.JobOrdersListColumns.PURCHASE_ORDER_ID, out id);
                 list.get (iter, Database.JobOrdersListColumns.PURCHASE_ORDER_REF_NUM, out refnum);
                 list.get (iter, Database.JobOrdersListColumns.PURCHASE_ORDER_DATE, out date_string);
 
@@ -153,6 +154,10 @@ public class Mpcjo.JobOrderListView : View {
                         ("<span color=\"#000000000000\">P.O. #%d</span>\n" +
                          "<span color=\"#88888a8a8585\">%s</span>")
                         .printf (refnum, (string) s);
+                } else if (id > 0) {
+                    cellrenderertext_purchase_order_number.markup =
+                        ("<span color=\"#000000000000\">%s</span>\n")
+                        .printf (_("Unreleased"));
                 } else {
                     cellrenderertext_purchase_order_number.markup = null;
                 }
