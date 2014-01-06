@@ -30,6 +30,7 @@ public class Mpcjo.JobOrderListView : View {
     public signal void job_order_selected (int id);
 
     private JobOrderEditor jobordereditor;
+    private HeaderSimpleButton button_print;
 
     private TreeViewColumn treeviewcolumn_job_order;
     private CellRendererText cellrenderertext_job_order_number;
@@ -49,6 +50,9 @@ public class Mpcjo.JobOrderListView : View {
             var builder = new Builder ();
             builder.add_from_resource ("/com/mobilectpower/JobOrders/job-order-list-view.ui");
             builder.connect_signals (this);
+
+            button_print = builder.get_object ("button_print") as HeaderSimpleButton;
+            toolbar_selection.pack_end (button_print);
 
             treeviewcolumn_job_order = builder.get_object ("treeviewcolumn_job_order") as TreeViewColumn;
             cellrenderertext_job_order_number = builder.get_object ("cellrenderertext_job_order_number") as CellRendererText;
@@ -212,6 +216,10 @@ public class Mpcjo.JobOrderListView : View {
                     cellrenderertext_payment.markup = null;
                 }
             });
+
+            /* Print button is sensitive if there is a selected item */
+            bind_property ("selected-items-num", button_print, "sensitive",
+                           BindingFlags.SYNC_CREATE);
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -301,6 +309,25 @@ public class Mpcjo.JobOrderListView : View {
         });
         jobordereditor.show ();
         stack.push (jobordereditor);
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_button_print_clicked (Button button) {
+        if (list == null)
+            return;
+
+        list.foreach ((model, path, iter) => {
+            var id = 0;
+            var ref_num = 0;
+            bool selected;
+
+            list.get (iter,
+                      Database.JobOrdersListColumns.ID, out id,
+                      Database.JobOrdersListColumns.REF_NUM, out ref_num,
+                      View.ModelColumns.SELECTED, out selected);
+
+            return false;
+        });
     }
 
 }
