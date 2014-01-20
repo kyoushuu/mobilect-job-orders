@@ -21,6 +21,7 @@
 using Gtk;
 using Gda;
 using Gd;
+using Pango;
 using Mpcw;
 
 public class Mpcjo.JobOrderListView : View {
@@ -44,6 +45,10 @@ public class Mpcjo.JobOrderListView : View {
     private CellRendererText cellrenderertext_invoice_number;
     private TreeViewColumn treeviewcolumn_payment;
     private CellRendererText cellrenderertext_payment;
+
+    private PrintSettings print_settings;
+
+    public const string PAPER_NAME_FANFOLD_GERMAN_LEGAL = "na_foolscap";
 
     construct {
         try {
@@ -161,7 +166,7 @@ public class Mpcjo.JobOrderListView : View {
                 } else if (id > 0) {
                     cellrenderertext_purchase_order_number.markup =
                         ("<span color=\"#000000000000\">%s</span>\n")
-                        .printf (_("Unreleased"));
+                        .printf (_("Not Yet Released"));
                 } else {
                     cellrenderertext_purchase_order_number.markup = null;
                 }
@@ -313,21 +318,216 @@ public class Mpcjo.JobOrderListView : View {
 
     [CCode (instance_pos = -1)]
     public void on_button_print_clicked (Button button) {
+        var items = new TreeRowReference[0];
+
         if (list == null)
             return;
 
         list.foreach ((model, path, iter) => {
-            var id = 0;
-            var ref_num = 0;
             bool selected;
 
             list.get (iter,
-                      Database.JobOrdersListColumns.ID, out id,
-                      Database.JobOrdersListColumns.REF_NUM, out ref_num,
                       View.ModelColumns.SELECTED, out selected);
+
+            if (selected) {
+                items += new TreeRowReference (model, path);
+            }
 
             return false;
         });
+
+        var print = new PrintOperation ();
+        print.embed_page_setup = true;
+
+        var normal_font = FontDescription.from_string ("sans 12");
+        var normal_font_height = 0.0;
+        var pages = 0;
+        var items_per_page = 0;
+
+        print.begin_print.connect ((context) => {
+            FontMetrics font_metrics;
+            var pcontext = context.create_pango_context ();
+
+            font_metrics = pcontext.load_font (normal_font).get_metrics (pcontext.get_language ());
+            normal_font_height = units_to_double (font_metrics.get_ascent () + font_metrics.get_descent ());
+
+            items_per_page = (int) Math.floor (context.get_height () / (normal_font_height * 2));
+            pages = (int) Math.ceil ((double) items.length / items_per_page);
+
+            print.set_n_pages (pages);
+        });
+
+        print.draw_page.connect ((context, page_nr) => {
+            var cr = context.get_cairo_context ();
+
+            var first_item = page_nr * items_per_page;
+            var items_current_page = items_per_page;
+            if (page_nr == pages - 1) {
+                items_current_page = items.length % items_per_page;
+            }
+
+            cr.rectangle (0, 0, context.get_width (), items_current_page * normal_font_height * 2);
+            cr.set_line_width (1.0);
+            cr.stroke ();
+
+            cr.set_line_width (0.5);
+
+            for (var i = 1; i < items_current_page; i++) {
+                cr.move_to (0, normal_font_height * 2 * i);
+                cr.rel_line_to (context.get_width (), 0);
+                cr.stroke ();
+            }
+
+            var layout = context.create_pango_layout ();
+            layout.set_font_description (normal_font);
+            layout.set_width (units_from_double (context.get_width ()));
+
+            var padding = 2.0;
+            var column_width = context.get_width () / 7;
+
+            for (var i = 0; i < items_current_page; i++) {
+                var ref_num = 0;
+                string customer, description;
+                string date_start, date_end;
+                int po_id, po_refnum;
+                string po_date;
+                int in_refnum;
+                string in_date, payment_date;
+                TreeIter iter;
+
+                var date = Date ();
+                char s[64];
+
+                list.get_iter (out iter, items[first_item + i].get_path ());
+                list.get (iter,
+                          Database.JobOrdersListColumns.REF_NUM, out ref_num,
+                          Database.JobOrdersListColumns.CUSTOMER, out customer,
+                          Database.JobOrdersListColumns.DESCRIPTION, out description,
+                          Database.JobOrdersListColumns.DATE_START, out date_start,
+                          Database.JobOrdersListColumns.DATE_END, out date_end,
+                          Database.JobOrdersListColumns.PURCHASE_ORDER_ID, out po_id,
+                          Database.JobOrdersListColumns.PURCHASE_ORDER_REF_NUM, out po_refnum,
+                          Database.JobOrdersListColumns.PURCHASE_ORDER_DATE, out po_date,
+                          Database.JobOrdersListColumns.INVOICE_REF_NUM, out in_refnum,
+                          Database.JobOrdersListColumns.INVOICE_DATE, out in_date,
+                          Database.JobOrdersListColumns.PAYMENT_DATE, out payment_date);
+
+                date.set_parse (date_start);
+                date.strftime (s, "%a, %d %b, %Y");
+                date_start = (string) s;
+
+                date.set_parse (date_end);
+                date.strftime (s, "%a, %d %b, %Y");
+                date_end = (string) s;
+
+                cr.move_to (padding, normal_font_height * 2 * i);
+
+                layout.set_font_description (normal_font);
+                layout.set_alignment (Pango.Alignment.LEFT);
+                layout.set_height (units_from_double (normal_font_height));
+                layout.set_width (units_from_double (column_width - padding * 2));
+                layout.set_markup (_("Job Order #%d").printf (ref_num), -1);
+                cairo_show_layout (cr, layout);
+
+                cr.rel_move_to (column_width, 0);
+
+                layout.set_font_description (normal_font);
+                layout.set_alignment (Pango.Alignment.LEFT);
+                layout.set_height (units_from_double (normal_font_height * 2));
+                layout.set_width (units_from_double (column_width * 1.75 - padding * 2));
+                layout.set_markup (_("<span color=\"#000000000000\">%s</span>\n" +
+                                     "<span color=\"#88888a8a8585\">%s</span>")
+                                    .printf (customer, description), -1);
+                cairo_show_layout (cr, layout);
+
+                cr.rel_move_to (column_width * 1.75, 0);
+
+                layout.set_font_description (normal_font);
+                layout.set_alignment (Pango.Alignment.RIGHT);
+                layout.set_height (units_from_double (normal_font_height * 2));
+                layout.set_width (units_from_double (column_width * 1.25 - padding * 2));
+                layout.set_markup (_("<i>from</i> %s\n<i>to</i> %s").printf (date_start, date_end), -1);
+                cairo_show_layout (cr, layout);
+
+                cr.rel_move_to (column_width * 1.25, 0);
+
+                layout.set_font_description (normal_font);
+                layout.set_alignment (Pango.Alignment.LEFT);
+                layout.set_height (units_from_double (normal_font_height * 2));
+                layout.set_width (units_from_double (column_width - padding * 2));
+                if (po_refnum > 0) {
+                    date.set_parse (po_date);
+                    date.strftime (s, "%a, %d %b, %Y");
+
+                    layout.set_markup (("<span color=\"#000000000000\">P.O. #%d</span>\n" +
+                                        "<span color=\"#88888a8a8585\">%s</span>")
+                                       .printf (po_refnum, (string) s), -1);
+                } else if (po_id > 0) {
+                    layout.set_markup (("<span color=\"#000000000000\">%s</span>\n")
+                                       .printf (_("Not Yet Released")), -1);
+                } else {
+                    layout.set_markup ("", -1);
+                }
+                cairo_show_layout (cr, layout);
+
+                cr.rel_move_to (column_width, 0);
+
+                layout.set_font_description (normal_font);
+                layout.set_alignment (Pango.Alignment.LEFT);
+                layout.set_height (units_from_double (normal_font_height * 2));
+                layout.set_width (units_from_double (column_width - padding * 2));
+                if (in_refnum > 0) {
+                    date.set_parse (in_date);
+                    date.strftime (s, "%a, %d %b, %Y");
+
+                    layout.set_markup (("<span color=\"#000000000000\">Invoice #%d</span>\n" +
+                                        "<span color=\"#88888a8a8585\">%s</span>")
+                                       .printf (in_refnum, (string) s), -1);
+                } else {
+                    layout.set_markup ("", -1);
+                }
+                cairo_show_layout (cr, layout);
+
+                cr.rel_move_to (column_width, 0);
+
+                if (payment_date != null && payment_date != "") {
+                    date.set_parse (payment_date);
+                    date.strftime (s, "%a, %d %b, %Y");
+
+                    layout.set_markup (("<span color=\"#000000000000\">Paid</span>\n" +
+                                        "<span color=\"#88888a8a8585\">%s</span>")
+                                       .printf ((string) s), -1);
+                } else {
+                    layout.set_markup ("", -1);
+                }
+                cairo_show_layout (cr, layout);
+            }
+        });
+
+        var page_setup = new PageSetup ();
+        page_setup.set_paper_size (new PaperSize (PAPER_NAME_FANFOLD_GERMAN_LEGAL));
+        page_setup.set_orientation (PageOrientation.LANDSCAPE);
+        print.set_default_page_setup (page_setup);
+
+        if (print_settings == null) {
+            print_settings = new PrintSettings ();
+            print_settings.set_paper_size (new PaperSize (PAPER_NAME_FANFOLD_GERMAN_LEGAL));
+            print_settings.set_orientation (PageOrientation.LANDSCAPE);
+        }
+        print.set_print_settings (print_settings);
+
+        try {
+            var result = print.run (PrintOperationAction.PRINT_DIALOG, get_toplevel () as Window);
+            if (result == PrintOperationResult.APPLY)
+                print_settings = print.get_print_settings ();
+        } catch (Error e) {
+            var e_dialog = new MessageDialog (get_toplevel () as Window, DialogFlags.MODAL,
+                                              MessageType.ERROR, ButtonsType.OK,
+                                              "Failed to print job orders.");
+            e_dialog.secondary_text = e.message;
+            e_dialog.run ();
+            e_dialog.destroy ();
+        }
     }
 
 }
