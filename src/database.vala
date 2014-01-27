@@ -27,7 +27,7 @@ public class Database : Object {
     public enum JobOrdersListColumns {
         ID = View.ModelColumns.NUM,
         REF_NUM,
-        DESCRIPTION,
+        PROJECT_NAME,
         CUSTOMER,
         ADDRESS,
         DATE_START,
@@ -100,7 +100,7 @@ public class Database : Object {
                 execute_sql ("CREATE TABLE IF NOT EXISTS job_orders (" +
                              "  id integer primary key autoincrement," +
                              "  ref_number integer not null," +
-                             "  description string," +
+                             "  project_name string," +
                              "  customer integer not null," +
                              "  address string," +
                              "  date_start string," +
@@ -168,7 +168,7 @@ public class Database : Object {
         return new ListStore (JobOrdersListColumns.NUM,
                               typeof (bool), typeof (bool),      /* Visible and selected */
                               typeof (int), typeof (int),        /* ID and Job order ref. num. */
-                              typeof (string),                   /* Description */
+                              typeof (string),                   /* Project name */
                               typeof (string), typeof (string),  /* Customer and address */
                               typeof (string), typeof (string),  /* Start and end date */
                               typeof (int),                      /* Purchase order id */
@@ -191,7 +191,7 @@ public class Database : Object {
             try {
                 var stmt = cnc.parse_sql_string ("SELECT" +
                                                  " job_orders.id, job_orders.ref_number," +
-                                                 " description," +
+                                                 " project_name," +
                                                  " customers.name, job_orders.address," +
                                                  " date_start, date_end," +
                                                  " purchase_orders.id," +
@@ -232,7 +232,7 @@ public class Database : Object {
                 var jo_number = (int) iter.get_value_at (i++);
 
                 column = iter.get_value_at (i++);
-                var description = dh_string.get_str_from_value (column);
+                var project_name = dh_string.get_str_from_value (column);
 
                 column = iter.get_value_at (i++);
                 var customer = dh_string.get_str_from_value (column);
@@ -276,7 +276,7 @@ public class Database : Object {
                     model.insert_with_values (null, -1,
                                               JobOrdersListColumns.ID, id,
                                               JobOrdersListColumns.REF_NUM, jo_number,
-                                              JobOrdersListColumns.DESCRIPTION, description,
+                                              JobOrdersListColumns.PROJECT_NAME, project_name,
                                               JobOrdersListColumns.CUSTOMER, customer,
                                               JobOrdersListColumns.ADDRESS, address,
                                               JobOrdersListColumns.DATE_START, date_start,
@@ -575,7 +575,7 @@ public class Database : Object {
         return true;
     }
 
-    public async int create_job_order (int refnum, int customer_id, string desc, string address, string date_start, string date_end, int po_id) throws Error {
+    public async int create_job_order (int refnum, int customer_id, string project_name, string address, string date_start, string date_end, int po_id) throws Error {
         SourceFunc callback = create_job_order.callback;
         int jo_id = 0;
 
@@ -599,13 +599,13 @@ public class Database : Object {
             try {
                 var stmt = cnc.parse_sql_string ("INSERT INTO job_orders (" +
                                                  " ref_number," +
-                                                 " description," +
+                                                 " project_name," +
                                                  " customer, address," +
                                                  " date_start, date_end," +
                                                  " purchase_order" +
                                                  ") VALUES (" +
                                                  " ##ref_number::int," +
-                                                 " ##description::string," +
+                                                 " ##project_name::string," +
                                                  " ##customer::int," +
                                                  " ##address::string," +
                                                  " ##date_start::string," +
@@ -615,7 +615,7 @@ public class Database : Object {
                                                  out stmt_params);
 
                 stmt_params.get_holder ("ref_number").set_value (value_jo_ref_number);
-                stmt_params.get_holder ("description").set_value_str (null, desc);
+                stmt_params.get_holder ("project_name").set_value_str (null, project_name);
                 stmt_params.get_holder ("customer").set_value (value_jo_customer);
                 stmt_params.get_holder ("address").set_value_str (null, address);
                 stmt_params.get_holder ("date_start").set_value_str (null, date_start);
@@ -654,7 +654,7 @@ public class Database : Object {
         return jo_id;
     }
 
-    public async bool update_job_order (int jo_id, int refnum, int customer_id, string desc, string address, string date_start, string date_end, int po_id) throws Error {
+    public async bool update_job_order (int jo_id, int refnum, int customer_id, string project_name, string address, string date_start, string date_end, int po_id) throws Error {
         SourceFunc callback = update_job_order.callback;
 
         ThreadFunc<Error?> run = () => {
@@ -679,7 +679,7 @@ public class Database : Object {
                 var stmt = cnc.parse_sql_string ("UPDATE job_orders " +
                                                  "SET " +
                                                  " ref_number=##ref_number::int," +
-                                                 " description=##description::string," +
+                                                 " project_name=##project_name::string," +
                                                  " customer=##customer::int," +
                                                  " address=##address::string," +
                                                  " date_start=##date_start::string," +
@@ -689,7 +689,7 @@ public class Database : Object {
                                                  out stmt_params);
                 stmt_params.get_holder ("id").set_value (value_jo_id);
                 stmt_params.get_holder ("ref_number").set_value (value_jo_ref_number);
-                stmt_params.get_holder ("description").set_value_str (null, desc);
+                stmt_params.get_holder ("project_name").set_value_str (null, project_name);
                 stmt_params.get_holder ("customer").set_value (value_jo_customer);
                 stmt_params.get_holder ("address").set_value_str (null, address);
                 stmt_params.get_holder ("date_start").set_value_str (null, date_start);
