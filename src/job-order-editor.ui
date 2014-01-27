@@ -107,13 +107,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_jo_desc">
+              <object class="GtkLabel" id="label_jo_projname">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">1</property>
-                <property name="label" translatable="yes">_Description</property>
+                <property name="label" translatable="yes">_Project Name</property>
                 <property name="use_underline">True</property>
-                <property name="mnemonic_widget">entry_jo_desc</property>
+                <property name="mnemonic_widget">entry_jo_projname</property>
                 <style>
                   <class name="dim-label"/>
                 </style>
@@ -126,7 +126,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="entry_jo_desc">
+              <object class="GtkEntry" id="entry_jo_projname">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="hexpand">True</property>

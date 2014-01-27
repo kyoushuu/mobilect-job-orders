@@ -101,18 +101,18 @@ public class Mpcjo.JobOrderListView : View {
 
             treeviewcolumn_customer.set_cell_data_func (cellrenderertext_customer, (column, cell, model, sort_iter) => {
                 TreeIter filter_iter, iter;
-                string customer, description;
+                string customer, project_name;
 
                 sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
                 filter.convert_iter_to_child_iter (out iter, filter_iter);
 
                 list.get (iter, Database.JobOrdersListColumns.CUSTOMER, out customer);
-                list.get (iter, Database.JobOrdersListColumns.DESCRIPTION, out description);
+                list.get (iter, Database.JobOrdersListColumns.PROJECT_NAME, out project_name);
 
                 cellrenderertext_customer.markup =
                     ("<span color=\"#000000000000\">%s</span>\n" +
                      "<span color=\"#88888a8a8585\">%s</span>")
-                    .printf (customer, description);
+                    .printf (project_name, customer);
             });
 
             treeviewcolumn_date.set_cell_data_func (cellrenderertext_date, (column, cell, model, sort_iter) => {
@@ -387,7 +387,7 @@ public class Mpcjo.JobOrderListView : View {
 
             for (var i = 0; i < items_current_page; i++) {
                 var ref_num = 0;
-                string customer, description;
+                string customer, project_name;
                 string date_start, date_end;
                 int po_id, po_refnum;
                 string po_date;
@@ -402,7 +402,7 @@ public class Mpcjo.JobOrderListView : View {
                 list.get (iter,
                           Database.JobOrdersListColumns.REF_NUM, out ref_num,
                           Database.JobOrdersListColumns.CUSTOMER, out customer,
-                          Database.JobOrdersListColumns.DESCRIPTION, out description,
+                          Database.JobOrdersListColumns.PROJECT_NAME, out project_name,
                           Database.JobOrdersListColumns.DATE_START, out date_start,
                           Database.JobOrdersListColumns.DATE_END, out date_end,
                           Database.JobOrdersListColumns.PURCHASE_ORDER_ID, out po_id,
@@ -426,7 +426,7 @@ public class Mpcjo.JobOrderListView : View {
                 layout.set_alignment (Pango.Alignment.LEFT);
                 layout.set_height (units_from_double (normal_font_height));
                 layout.set_width (units_from_double (column_width - padding * 2));
-                layout.set_markup (_("Job Order #%d").printf (ref_num), -1);
+                layout.set_markup (_("J.O. #%d").printf (ref_num), -1);
                 cairo_show_layout (cr, layout);
 
                 cr.rel_move_to (column_width, 0);
@@ -437,7 +437,7 @@ public class Mpcjo.JobOrderListView : View {
                 layout.set_width (units_from_double (column_width * 1.75 - padding * 2));
                 layout.set_markup (_("<span color=\"#000000000000\">%s</span>\n" +
                                      "<span color=\"#88888a8a8585\">%s</span>")
-                                    .printf (customer, description), -1);
+                                    .printf (project_name, customer), -1);
                 cairo_show_layout (cr, layout);
 
                 cr.rel_move_to (column_width * 1.75, 0);

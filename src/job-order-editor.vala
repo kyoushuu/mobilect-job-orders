@@ -32,7 +32,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
     private int po_id;
 
     private SpinButton spinbutton_jo_refnum;
-    private Entry entry_jo_desc;
+    private Entry entry_jo_projname;
     private ComboBox combobox_jo_customer;
     private Entry entry_jo_customer;
     private EntryCompletion entrycompletion_jo_customer;
@@ -59,7 +59,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
             can_focus = true;
 
             spinbutton_jo_refnum = builder.get_object ("spinbutton_jo_refnum") as SpinButton;
-            entry_jo_desc = builder.get_object ("entry_jo_desc") as Entry;
+            entry_jo_projname = builder.get_object ("entry_jo_projname") as Entry;
             combobox_jo_customer = builder.get_object ("combobox_jo_customer") as ComboBox;
             entry_jo_customer = builder.get_object ("entry_jo_customer") as Entry;
             entrycompletion_jo_customer = builder.get_object ("entrycompletion_jo_customer") as EntryCompletion;
@@ -106,7 +106,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
         }
 
         spinbutton_jo_refnum.value = 0;
-        entry_jo_desc.text = "";
+        entry_jo_projname.text = "";
         entry_jo_customer.text = "";
         entry_jo_address.text = "";
         entry_jo_date_start.entry.text = "";
@@ -157,7 +157,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
                 var stmt = database.cnc.
                     parse_sql_string ("SELECT" +
                                       " job_orders.id, job_orders.ref_number," +
-                                      " description," +
+                                      " project_name," +
                                       " customers.id, customers.name, job_orders.address," +
                                       " date_start, date_end," +
                                       " purchase_orders.id, purchase_orders.ref_number " +
@@ -197,7 +197,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
                 var jo_number = (int) iter.get_value_at (1);
 
                 column = iter.get_value_at (2);
-                var description = database.dh_string.get_str_from_value (column);
+                var project_name = database.dh_string.get_str_from_value (column);
 
                 lock (customer_id) {
                     customer_id = (int) iter.get_value_at (3);
@@ -241,7 +241,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
 
                 Idle.add (() => {
                     spinbutton_jo_refnum.value = jo_number;
-                    entry_jo_desc.text = description;
+                    entry_jo_projname.text = project_name;
                     entry_jo_customer.text = customer;
                     entry_jo_address.text = address;
                     entry_jo_date_start.entry.text = date_start;
@@ -337,7 +337,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
             lock (po_id) {
                 ret = yield database.create_job_order ((int) spinbutton_jo_refnum.value,
                                                        customer_id,
-                                                       entry_jo_desc.text,
+                                                       entry_jo_projname.text,
                                                        entry_jo_address.text,
                                                        entry_jo_date_start.entry.text,
                                                        entry_jo_date_end.entry.text,
@@ -367,7 +367,7 @@ public class Mpcjo.JobOrderEditor : StackPage {
                     ret = yield database.update_job_order (jo_id,
                                                            (int) spinbutton_jo_refnum.value,
                                                            customer_id,
-                                                           entry_jo_desc.text,
+                                                           entry_jo_projname.text,
                                                            entry_jo_address.text,
                                                            entry_jo_date_start.entry.text,
                                                            entry_jo_date_end.entry.text,
