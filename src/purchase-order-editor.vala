@@ -314,6 +314,19 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
     [CCode (instance_pos = -1)]
     public void toolbutton_in_remove_clicked (ToolButton toolbutton) {
+        var label = listbox_po_invoices.get_selected_child ();
+        var in_id = label.get_data<int> ("in_id");
+
+        database.remove_mapping.begin (po_id, in_id, (obj, res) => {
+            try {
+                if (database.remove_mapping.end (res)) {
+                    label.destroy ();
+                    invoices.remove (in_id);
+                }
+            } catch (Error e) {
+                warning ("Failed to unmap invoice to purchase order: %s", e.message);
+            }
+        });
     }
 
 }
