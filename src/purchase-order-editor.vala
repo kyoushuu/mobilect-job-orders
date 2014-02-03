@@ -29,7 +29,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
     public Database database { public get; private set; }
 
     private int po_id;
-    private int[] invoices;
+    private List<int> invoices;
 
     private SpinButton spinbutton_po_refnum;
     private DateEntry entry_po_date;
@@ -195,11 +195,12 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
                           Database.MappingsListColumns.INVOICE_ID, out in_id,
                           Database.MappingsListColumns.INVOICE_REF_NUM, out in_number);
 
-                if (po_id == id && !(in_id in invoices)) {
+                if (po_id == id && invoices.find (in_id) == null) {
                     var label = new Label (_("Invoice #%d").printf (in_number));
+                    label.set_data ("in_id", in_id);
                     listbox_po_invoices.add (label);
                     label.show ();
-                    invoices += in_id;
+                    invoices.append (in_id);
                 }
 
                 return false;
@@ -289,14 +290,15 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
         var listview = new InvoiceListView (database);
         listview.add_activated.connect ((items) => {
             foreach (var item in items) {
-                if (!(item.id in invoices)) {
+                if (invoices.find (item.id) == null) {
                     database.create_mapping.begin (po_id, item.id, (obj, res) => {
                         try {
                             if (database.create_mapping.end (res)) {
                                 var label = new Label (_("Invoice #%d").printf (item.ref_num));
+                                label.set_data ("in_id", item.id);
                                 listbox_po_invoices.add (label);
                                 label.show ();
-                                invoices += item.id;
+                                invoices.append (item.id);
                             }
                         } catch (Error e) {
                             warning ("Failed to map invoice to purchase order: %s", e.message);
