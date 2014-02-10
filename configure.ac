@@ -81,6 +81,40 @@ LT_OUTPUT
 
 
 dnl ***************************************************************************
+dnl Check for MS Windows
+dnl ***************************************************************************
+
+AC_CANONICAL_HOST
+
+case $host_os in
+  *mingw* | pw32* | cygwin*)
+    platform_win32=yes
+    ;;
+  *)
+    platform_win32=no
+    ;;
+esac
+AM_CONDITIONAL(PLATFORM_WIN32, test x"$platform_win32" = "xyes")
+
+case $host_os in
+  *mingw*)
+    native_win32=yes
+    ;;
+  *)
+    native_win32=no
+    ;;
+esac
+AM_CONDITIONAL(NATIVE_WIN32, test x"$native_win32" = "xyes")
+
+if test "$native_win32" = "yes"; then
+  AC_CHECK_TOOL(WINDRES, windres, no)
+  if test "$WINDRES" = no; then
+    AC_MSG_ERROR([*** Could not find an implementation of windres in your PATH.])
+  fi
+fi
+
+
+dnl ***************************************************************************
 dnl Internationalization
 dnl ***************************************************************************
 

@@ -54,7 +54,6 @@ mobilect_job_orders_VALAFLAGS = \
 
 mobilect_job_orders_LDFLAGS = \
 	-no-undefined \
-	-Wl,--export-dynamic \
 	$(NULL)
 
 mobilect_job_orders_LDADD = \
@@ -64,6 +63,16 @@ mobilect_job_orders_LDADD = \
 	$(top_builddir)/egg-list-box/libegglistbox.la \
 	$(top_builddir)/libgd/libgd.la \
 	$(NULL)
+
+
+if NATIVE_WIN32
+mobilect_job_orders_LDFLAGS += \
+	-Wl,--export-all-symbols \
+	-mwindows
+else
+mobilect_job_orders_LDFLAGS += \
+	-Wl,--export-dynamic
+endif
 
 
 resources = \
