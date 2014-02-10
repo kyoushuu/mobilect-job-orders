@@ -95,7 +95,7 @@ dnl ***************************************************************************
 dnl Configure submodules
 dnl ***************************************************************************
 
-LIBGD_INIT([header-bar notification revealer stack static tagged-entry vapi])
+LIBGD_INIT([header-bar notification revealer stack static tagged-entry])
 
 # EggListBox submodule
 #prev_top_build_prefix=$ac_top_build_prefix

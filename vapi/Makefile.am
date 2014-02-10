@@ -4,5 +4,6 @@
 NULL =
 
 EXTRA_DIST = \
+	gd-1.0.vapi \
 	libgda-5.0.vapi \
 	$(NULL)
