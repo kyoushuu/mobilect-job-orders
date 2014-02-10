@@ -35,10 +35,6 @@ public class Mpcjo.JobOrderListView : View {
 
     private TreeViewColumn treeviewcolumn_job_order;
     private CellRendererText cellrenderertext_job_order_number;
-    private TreeViewColumn treeviewcolumn_customer;
-    private CellRendererText cellrenderertext_customer;
-    private TreeViewColumn treeviewcolumn_date;
-    private CellRendererText cellrenderertext_date;
     private TreeViewColumn treeviewcolumn_purchase_order;
     private CellRendererText cellrenderertext_purchase_order_number;
     private TreeViewColumn treeviewcolumn_invoice;
@@ -62,14 +58,6 @@ public class Mpcjo.JobOrderListView : View {
             treeviewcolumn_job_order = builder.get_object ("treeviewcolumn_job_order") as TreeViewColumn;
             cellrenderertext_job_order_number = builder.get_object ("cellrenderertext_job_order_number") as CellRendererText;
             treeview.append_column (treeviewcolumn_job_order);
-
-            treeviewcolumn_customer = builder.get_object ("treeviewcolumn_customer") as TreeViewColumn;
-            cellrenderertext_customer = builder.get_object ("cellrenderertext_customer") as CellRendererText;
-            treeview.append_column (treeviewcolumn_customer);
-
-            treeviewcolumn_date = builder.get_object ("treeviewcolumn_date") as TreeViewColumn;
-            cellrenderertext_date = builder.get_object ("cellrenderertext_date") as CellRendererText;
-            treeview.append_column (treeviewcolumn_date);
 
             treeviewcolumn_purchase_order = builder.get_object ("treeviewcolumn_purchase_order") as TreeViewColumn;
             cellrenderertext_purchase_order_number = builder.get_object ("cellrenderertext_purchase_order_number") as CellRendererText;
@@ -97,47 +85,6 @@ public class Mpcjo.JobOrderListView : View {
                 } else {
                     cellrenderertext_job_order_number.markup = null;
                 }
-            });
-
-            treeviewcolumn_customer.set_cell_data_func (cellrenderertext_customer, (column, cell, model, sort_iter) => {
-                TreeIter filter_iter, iter;
-                string customer, project_name;
-
-                sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
-                filter.convert_iter_to_child_iter (out iter, filter_iter);
-
-                list.get (iter, Database.JobOrdersListColumns.CUSTOMER, out customer);
-                list.get (iter, Database.JobOrdersListColumns.PROJECT_NAME, out project_name);
-
-                cellrenderertext_customer.markup =
-                    ("<span color=\"#000000000000\">%s</span>\n" +
-                     "<span color=\"#88888a8a8585\">%s</span>")
-                    .printf (project_name, customer);
-            });
-
-            treeviewcolumn_date.set_cell_data_func (cellrenderertext_date, (column, cell, model, sort_iter) => {
-                TreeIter filter_iter, iter;
-                string date_start, date_end, markup;
-                var date = Date ();
-                char s[64];
-
-                sort.convert_iter_to_child_iter (out filter_iter, sort_iter);
-                filter.convert_iter_to_child_iter (out iter, filter_iter);
-
-                list.get (iter, Database.JobOrdersListColumns.DATE_START, out date_start);
-                list.get (iter, Database.JobOrdersListColumns.DATE_END, out date_end);
-
-                date.set_parse (date_start);
-                date.strftime (s, "%a, %d %b, %Y");
-                date_start = (string) s;
-
-                date.set_parse (date_end);
-                date.strftime (s, "%a, %d %b, %Y");
-                date_end = (string) s;
-
-                cellrenderertext_date.markup =
-                    "<i>from</i> %s\n<i>to</i> %s"
-                    .printf (date_start, date_end);
             });
 
             treeviewcolumn_purchase_order.set_cell_data_func (cellrenderertext_purchase_order_number, (column, cell, model, sort_iter) => {
@@ -383,7 +330,7 @@ public class Mpcjo.JobOrderListView : View {
             layout.set_width (units_from_double (context.get_width ()));
 
             var padding = 2.0;
-            var column_width = context.get_width () / 7;
+            var column_width = context.get_width () / 4;
 
             for (var i = 0; i < items_current_page; i++) {
                 var ref_num = 0;
@@ -430,26 +377,6 @@ public class Mpcjo.JobOrderListView : View {
                 cairo_show_layout (cr, layout);
 
                 cr.rel_move_to (column_width, 0);
-
-                layout.set_font_description (normal_font);
-                layout.set_alignment (Pango.Alignment.LEFT);
-                layout.set_height (units_from_double (normal_font_height * 2));
-                layout.set_width (units_from_double (column_width * 1.75 - padding * 2));
-                layout.set_markup (_("<span color=\"#000000000000\">%s</span>\n" +
-                                     "<span color=\"#88888a8a8585\">%s</span>")
-                                    .printf (project_name, customer), -1);
-                cairo_show_layout (cr, layout);
-
-                cr.rel_move_to (column_width * 1.75, 0);
-
-                layout.set_font_description (normal_font);
-                layout.set_alignment (Pango.Alignment.RIGHT);
-                layout.set_height (units_from_double (normal_font_height * 2));
-                layout.set_width (units_from_double (column_width * 1.25 - padding * 2));
-                layout.set_markup (_("<i>from</i> %s\n<i>to</i> %s").printf (date_start, date_end), -1);
-                cairo_show_layout (cr, layout);
-
-                cr.rel_move_to (column_width * 1.25, 0);
 
                 layout.set_font_description (normal_font);
                 layout.set_alignment (Pango.Alignment.LEFT);
@@ -506,13 +433,11 @@ public class Mpcjo.JobOrderListView : View {
 
         var page_setup = new PageSetup ();
         page_setup.set_paper_size (new PaperSize (PAPER_NAME_FANFOLD_GERMAN_LEGAL));
-        page_setup.set_orientation (PageOrientation.LANDSCAPE);
         print.set_default_page_setup (page_setup);
 
         if (print_settings == null) {
             print_settings = new PrintSettings ();
             print_settings.set_paper_size (new PaperSize (PAPER_NAME_FANFOLD_GERMAN_LEGAL));
-            print_settings.set_orientation (PageOrientation.LANDSCAPE);
         }
         print.set_print_settings (print_settings);
 
