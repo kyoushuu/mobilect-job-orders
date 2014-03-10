@@ -17,6 +17,7 @@ AM_CPPFLAGS = \
 	$(NULL)
 
 AM_CFLAGS = \
+	--include=config.h \
 	-w \
 	-g
 
