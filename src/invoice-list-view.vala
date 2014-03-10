@@ -20,7 +20,6 @@
 
 using Gtk;
 using Gda;
-using Gd;
 using Mpcw;
 
 public class Mpcjo.InvoiceListView : View {
@@ -38,7 +37,7 @@ public class Mpcjo.InvoiceListView : View {
     }
 
     private InvoiceEditor invoiceeditor;
-    private HeaderSimpleButton button_add;
+    private Button button_add;
 
     private TreeViewColumn treeviewcolumn_invoice;
     private CellRendererText cellrenderertext_invoice_number;
@@ -55,7 +54,7 @@ public class Mpcjo.InvoiceListView : View {
             builder.add_from_resource ("/com/mobilectpower/JobOrders/invoice-list-view.ui");
             builder.connect_signals (this);
 
-            button_add = builder.get_object ("button_add") as HeaderSimpleButton;
+            button_add = builder.get_object ("button_add") as Button;
             toolbar_selection.pack_end (button_add);
 
             treeviewcolumn_invoice = builder.get_object ("treeviewcolumn_invoice") as TreeViewColumn;

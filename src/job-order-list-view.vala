@@ -20,7 +20,6 @@
 
 using Gtk;
 using Gda;
-using Gd;
 using Pango;
 using Mpcw;
 
@@ -31,7 +30,7 @@ public class Mpcjo.JobOrderListView : View {
     public signal void job_order_selected (int id);
 
     private JobOrderEditor jobordereditor;
-    private HeaderSimpleButton button_print;
+    private Button button_print;
 
     private TreeViewColumn treeviewcolumn_job_order;
     private CellRendererText cellrenderertext_job_order_number;
@@ -52,7 +51,7 @@ public class Mpcjo.JobOrderListView : View {
             builder.add_from_resource ("/com/mobilectpower/JobOrders/job-order-list-view.ui");
             builder.connect_signals (this);
 
-            button_print = builder.get_object ("button_print") as HeaderSimpleButton;
+            button_print = builder.get_object ("button_print") as Button;
             toolbar_selection.pack_end (button_print);
 
             treeviewcolumn_job_order = builder.get_object ("treeviewcolumn_job_order") as TreeViewColumn;

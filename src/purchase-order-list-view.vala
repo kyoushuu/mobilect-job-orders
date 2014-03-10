@@ -20,7 +20,6 @@
 
 using Gtk;
 using Gda;
-using Gd;
 using Mpcw;
 
 public class Mpcjo.PurchaseOrderListView : View {
@@ -33,7 +32,7 @@ public class Mpcjo.PurchaseOrderListView : View {
     }
 
     private PurchaseOrderEditor purchaseordereditor;
-    private HeaderSimpleButton button_set;
+    private Button button_set;
 
     private TreeViewColumn treeviewcolumn_purchase_order;
     private CellRendererText cellrenderertext_purchase_order_number;
@@ -46,7 +45,7 @@ public class Mpcjo.PurchaseOrderListView : View {
             builder.add_from_resource ("/com/mobilectpower/JobOrders/purchase-order-list-view.ui");
             builder.connect_signals (this);
 
-            button_set = builder.get_object ("button_set") as HeaderSimpleButton;
+            button_set = builder.get_object ("button_set") as Button;
             toolbar_selection.pack_end (button_set);
 
             treeviewcolumn_purchase_order = builder.get_object ("treeviewcolumn_purchase_order") as TreeViewColumn;

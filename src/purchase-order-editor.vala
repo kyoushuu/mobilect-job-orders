@@ -20,7 +20,6 @@
 
 using Gtk;
 using Gda;
-using Egg;
 using Mpcw;
 
 public class Mpcjo.PurchaseOrderEditor : StackPage {
@@ -33,11 +32,10 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
     private SpinButton spinbutton_po_refnum;
     private DateEntry entry_po_date;
-    private Egg.ListBox listbox_po_invoices;
+    private ListBox listbox_po_invoices;
 
     construct {
         try {
-            typeof (Egg.ListBox);
             var builder = new Builder ();
             builder.add_from_resource ("/com/mobilectpower/JobOrders/purchase-order-editor.ui");
             builder.connect_signals (this);
@@ -49,7 +47,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
             spinbutton_po_refnum = builder.get_object ("spinbutton_po_refnum") as SpinButton;
             entry_po_date = builder.get_object ("entry_po_date") as DateEntry;
-            listbox_po_invoices = builder.get_object ("listbox_po_invoices") as Egg.ListBox;
+            listbox_po_invoices = builder.get_object ("listbox_po_invoices") as ListBox;
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -314,7 +312,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
     [CCode (instance_pos = -1)]
     public void toolbutton_in_remove_clicked (ToolButton toolbutton) {
-        var label = listbox_po_invoices.get_selected_child ();
+        var label = listbox_po_invoices.get_selected_row ().get_header ();
         var in_id = label.get_data<int> ("in_id");
 
         database.remove_mapping.begin (po_id, in_id, (obj, res) => {

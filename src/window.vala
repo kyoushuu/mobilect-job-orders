@@ -19,11 +19,10 @@
  */
 
 using Gtk;
-using Gd;
 
 public class Mpcjo.Window : Mpcw.Window {
 
-    public HeaderSimpleButton button_new;
+    public Button button_new;
 
     public JobOrderListView joborderlistview;
 

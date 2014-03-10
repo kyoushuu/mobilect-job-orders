@@ -143,7 +143,7 @@ dnl ***************************************************************************
 dnl Check packages
 dnl ***************************************************************************
 
-PKG_CHECK_MODULES([GTK], [gtk+-3.0 >= 3.8.0])
+PKG_CHECK_MODULES([GTK], [gtk+-3.0 >= 3.10.0])
 PKG_CHECK_MODULES([GDA], [libgda-5.0])
 PKG_CHECK_MODULES([MOBILECT_WIDGETS], [mobilect-widgets-1.0])
 

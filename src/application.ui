@@ -11,7 +11,6 @@
     <property name="title" translatable="yes">Mobilect Job Orders</property>
     <property name="default_width">960</property>
     <property name="default_height">540</property>
-    <property name="hide_titlebar_when_maximized">True</property>
     <property name="app">application</property>
   </object>
 </interface>

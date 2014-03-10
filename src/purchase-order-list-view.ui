@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.8 -->
-  <object class="GdHeaderSimpleButton" id="button_set">
+  <object class="GtkButton" id="button_set">
     <property name="visible">True</property>
     <property name="halign">end</property>
+    <property name="valign">center</property>
     <property name="label">Set for Job Order</property>
     <signal name="clicked" handler="mpcjo_purchase_order_list_view_on_button_set_clicked" swapped="no"/>
+    <style>
+      <class name="text-button"/>
+    </style>
   </object>
   <object class="GtkTreeViewColumn" id="treeviewcolumn_purchase_order">
     <property name="min_width">50</property>
