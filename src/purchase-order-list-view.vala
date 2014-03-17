@@ -108,6 +108,11 @@ public class Mpcjo.PurchaseOrderListView : View {
         });
     }
 
+    public override void shown () {
+        stack.headerbar.title = "Purchase Orders";
+        base.shown ();
+    }
+
     public override void new_activated () {
         create_editor ();
         purchaseordereditor.create_new.begin ((obj, res) => {

@@ -57,6 +57,16 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
         this.database = database;
     }
 
+    public override void shown () {
+        stack.headerbar.title = _("Purchase Order #%d").printf ((int) spinbutton_po_refnum.value);
+        base.shown ();
+    }
+
+    public override void hidden () {
+        stack.headerbar.title = null;
+        base.hidden ();
+    }
+
     public override void close () {
         save.begin ((obj, res) => {
             if (save.end (res)) {

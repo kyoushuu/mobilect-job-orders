@@ -140,6 +140,11 @@ public class Mpcjo.InvoiceListView : View {
         });
     }
 
+    public override void shown () {
+        stack.headerbar.title = "Invoices";
+        base.shown ();
+    }
+
     public override void new_activated () {
         create_editor ();
         invoiceeditor.create_new.begin ((obj, res) => {

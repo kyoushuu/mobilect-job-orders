@@ -80,6 +80,26 @@ public class Mpcjo.JobOrderEditor : StackPage {
         this.database = database;
     }
 
+    public override void added () {
+        /* Update header bar title when project name changes */
+        entry_jo_projname.bind_property ("text", stack.headerbar, "subtitle",
+                                         BindingFlags.SYNC_CREATE);
+
+        base.added ();
+    }
+
+    public override void shown () {
+        stack.headerbar.title = _("Job Order #%d").printf ((int) spinbutton_jo_refnum.value);
+        stack.headerbar.subtitle = entry_jo_projname.text;
+        base.shown ();
+    }
+
+    public override void hidden () {
+        stack.headerbar.title = null;
+        stack.headerbar.subtitle = null;
+        base.hidden ();
+    }
+
     public override void close () {
         save.begin ((obj, res) => {
             if (save.end (res)) {
@@ -392,6 +412,11 @@ public class Mpcjo.JobOrderEditor : StackPage {
     public async int create_customer () throws Error {
         return yield database.create_customer (entry_jo_customer.text,
                                                entry_jo_address.text);
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_spinbutton_jo_refnum_value_changed (SpinButton spinbutton) {
+        stack.headerbar.title = _("Job Order #%d").printf ((int) spinbutton_jo_refnum.value);
     }
 
     [CCode (instance_pos = -1)]

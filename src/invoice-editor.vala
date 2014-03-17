@@ -58,6 +58,16 @@ public class Mpcjo.InvoiceEditor : StackPage {
         this.database = database;
     }
 
+    public override void shown () {
+        stack.headerbar.title = _("Invoice #%d").printf ((int) spinbutton_in_refnum.value);
+        base.shown ();
+    }
+
+    public override void hidden () {
+        stack.headerbar.title = null;
+        base.hidden ();
+    }
+
     public override void close () {
         save.begin ((obj, res) => {
             if (save.end (res)) {

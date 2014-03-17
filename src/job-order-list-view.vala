@@ -183,6 +183,11 @@ public class Mpcjo.JobOrderListView : View {
         });
     }
 
+    public override void shown () {
+        stack.headerbar.title = "Job Orders";
+        base.shown ();
+    }
+
     public override void new_activated () {
         create_editor ();
         jobordereditor.create_new.begin ((obj, res) => {
