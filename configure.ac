@@ -131,13 +131,6 @@ dnl ***************************************************************************
 
 LIBGD_INIT([header-bar notification revealer stack static tagged-entry])
 
-# EggListBox submodule
-#prev_top_build_prefix=$ac_top_build_prefix
-#prev_ac_configure_args=$ac_configure_args
-AC_CONFIG_SUBDIRS([egg-list-box])
-#ac_top_build_prefix=$prev_top_build_prefix
-#ac_configure_args=$prev_ac_configure_args
-
 
 dnl ***************************************************************************
 dnl Check packages
