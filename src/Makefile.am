@@ -74,13 +74,13 @@ endif
 
 
 resources = \
-	application.ui \
 	job-order-list-view.ui \
 	job-order-editor.ui \
 	purchase-order-list-view.ui \
 	purchase-order-editor.ui \
 	invoice-list-view.ui \
 	invoice-editor.ui \
+	window.ui \
 	$(NULL)
 
 resources.c: mobilect-job-orders.gresource.xml $(resources)

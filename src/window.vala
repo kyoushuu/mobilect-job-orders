@@ -20,9 +20,8 @@
 
 using Gtk;
 
+[GtkTemplate (ui = "/com/mobilectpower/JobOrders/window.ui")]
 public class Mpcjo.Window : Mpcw.Window {
-
-    public Button button_new;
 
     public JobOrderListView joborderlistview;
 
