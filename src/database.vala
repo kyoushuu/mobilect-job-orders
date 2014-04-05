@@ -90,6 +90,8 @@ public class Database : Object {
         NUM
     }
 
+    public delegate bool GeneralFilter (GeneralRow row);
+
     public Connection cnc;
     public DataHandler dh_string;
 
@@ -195,7 +197,7 @@ public class Database : Object {
                               typeof (string));                  /* Payment date */
     }
 
-    public async bool load_job_orders_to_model (ListStore model) throws Error {
+    public async bool load_job_orders_to_model (ListStore model, GeneralFilter? filter = null) throws Error {
         SourceFunc callback = load_job_orders_to_model.callback;
 
         debug ("Queue loading of job orders");
@@ -288,6 +290,13 @@ public class Database : Object {
 
                 column = iter.get_value_at (i++);
                 row.in_paydate = dh_string.get_str_from_value (column);
+
+                if (filter != null) {
+                    if (!filter (row)) {
+                        debug ("Filtered out job order with id number %d", row.jo_id);
+                        continue;
+                    }
+                }
 
                 debug ("Queued insertion of job order with id number %d to tree model", row.jo_id);
                 Idle.add (() => {
