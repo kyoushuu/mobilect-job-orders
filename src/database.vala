@@ -24,6 +24,23 @@ using Mpcw;
 
 public class Database : Object {
 
+    public struct GeneralRow {
+        int jo_id;
+        int jo_refnum;
+        string jo_project_name;
+        string jo_customer;
+        string jo_address;
+        string jo_date_start;
+        string jo_date_end;
+        int po_id;
+        int po_refnum;
+        string po_date;
+        int in_id;
+        int in_refnum;
+        string in_date;
+        string in_paydate;
+    }
+
     public enum JobOrdersListColumns {
         ID = View.ModelColumns.NUM,
         REF_NUM,
@@ -227,71 +244,72 @@ public class Database : Object {
             while (iter.move_next ()) {
                 Value? column;
                 int i = 0;
+                var row = GeneralRow ();
 
-                var id = (int) iter.get_value_at (i++);
-                var jo_number = (int) iter.get_value_at (i++);
-
-                column = iter.get_value_at (i++);
-                var project_name = dh_string.get_str_from_value (column);
+                row.jo_id = (int) iter.get_value_at (i++);
+                row.jo_refnum = (int) iter.get_value_at (i++);
 
                 column = iter.get_value_at (i++);
-                var customer = dh_string.get_str_from_value (column);
+                row.jo_project_name = dh_string.get_str_from_value (column);
 
                 column = iter.get_value_at (i++);
-                var address = dh_string.get_str_from_value (column);
+                row.jo_customer = dh_string.get_str_from_value (column);
 
                 column = iter.get_value_at (i++);
-                var date_start = dh_string.get_str_from_value (column);
+                row.jo_address = dh_string.get_str_from_value (column);
 
                 column = iter.get_value_at (i++);
-                var date_end = dh_string.get_str_from_value (column);
+                row.jo_date_start = dh_string.get_str_from_value (column);
 
                 column = iter.get_value_at (i++);
-                var po_id = (!column.holds (typeof (Null))?
+                row.jo_date_end = dh_string.get_str_from_value (column);
+
+                column = iter.get_value_at (i++);
+                row.po_id = (!column.holds (typeof (Null))?
                              (int) column : 0);
 
                 column = iter.get_value_at (i++);
-                var po_number = (!column.holds (typeof (Null))?
+                row.po_refnum = (!column.holds (typeof (Null))?
                                  (int) column : 0);
 
                 column = iter.get_value_at (i++);
-                var date_po = dh_string.get_str_from_value (column);
+                row.po_date = dh_string.get_str_from_value (column);
 
                 column = iter.get_value_at (i++);
-                var in_id = (!column.holds (typeof (Null))?
+                row.in_id = (!column.holds (typeof (Null))?
                              (int) column : 0);
 
                 column = iter.get_value_at (i++);
-                var in_number = (!column.holds (typeof (Null))?
+                row.in_refnum = (!column.holds (typeof (Null))?
                                  (int) column : 0);
 
                 column = iter.get_value_at (i++);
-                var date_in = dh_string.get_str_from_value (column);
+                row.in_date = dh_string.get_str_from_value (column);
 
                 column = iter.get_value_at (i++);
-                var date_paid = dh_string.get_str_from_value (column);
+                row.in_paydate = dh_string.get_str_from_value (column);
 
-                debug ("Queued insertion of job order with id number %d to tree model", id);
+                debug ("Queued insertion of job order with id number %d to tree model", row.jo_id);
                 Idle.add (() => {
                     model.insert_with_values (null, -1,
-                                              JobOrdersListColumns.ID, id,
-                                              JobOrdersListColumns.REF_NUM, jo_number,
-                                              JobOrdersListColumns.PROJECT_NAME, project_name,
-                                              JobOrdersListColumns.CUSTOMER, customer,
-                                              JobOrdersListColumns.ADDRESS, address,
-                                              JobOrdersListColumns.DATE_START, date_start,
-                                              JobOrdersListColumns.DATE_END, date_end,
-                                              JobOrdersListColumns.PURCHASE_ORDER_ID, po_id,
-                                              JobOrdersListColumns.PURCHASE_ORDER_REF_NUM, po_number,
-                                              JobOrdersListColumns.PURCHASE_ORDER_DATE, date_po,
-                                              JobOrdersListColumns.INVOICE_ID, in_id,
-                                              JobOrdersListColumns.INVOICE_REF_NUM, in_number,
-                                              JobOrdersListColumns.INVOICE_DATE, date_in,
-                                              JobOrdersListColumns.PAYMENT_DATE, date_paid,
+                                              JobOrdersListColumns.ID, row.jo_id,
+                                              JobOrdersListColumns.REF_NUM, row.jo_refnum,
+                                              JobOrdersListColumns.PROJECT_NAME, row.jo_project_name,
+                                              JobOrdersListColumns.CUSTOMER, row.jo_customer,
+                                              JobOrdersListColumns.ADDRESS, row.jo_address,
+                                              JobOrdersListColumns.DATE_START, row.jo_date_start,
+                                              JobOrdersListColumns.DATE_END, row.jo_date_end,
+                                              JobOrdersListColumns.PURCHASE_ORDER_ID, row.po_id,
+                                              JobOrdersListColumns.PURCHASE_ORDER_REF_NUM, row.po_refnum,
+                                              JobOrdersListColumns.PURCHASE_ORDER_DATE, row.po_date,
+                                              JobOrdersListColumns.INVOICE_ID, row.in_id,
+                                              JobOrdersListColumns.INVOICE_REF_NUM, row.in_refnum,
+                                              JobOrdersListColumns.INVOICE_DATE, row.in_date,
+                                              JobOrdersListColumns.PAYMENT_DATE, row.in_paydate,
                                               View.ModelColumns.VISIBLE, true,
                                               View.ModelColumns.SELECTED, false);
 
-                    debug ("Inserted job order with id number %d to tree model", id);
+                    debug ("Inserted job order with id number %d to tree model", row.jo_id);
 
                     return false;
                 });
