@@ -220,6 +220,63 @@ public class Mpcjo.JobOrderListView : View {
         job_order_selected (id);
     }
 
+    public override void search_changed (string text) {
+        var start = Date ();
+        var end = Date ();
+        Database.GeneralFilter filter = null;
+
+        if (DateUtil.span_for_text (text, ref start, ref end)) {
+            if (start.valid () && end.valid ()) {
+                if (start.compare (end) != 0) {
+                    filter = (row) => {
+                        var jo_date_start = Date ();
+                        jo_date_start.set_parse (row.jo_date_start);
+
+                        return start.compare (jo_date_start) <= 0 &&
+                            end.compare (jo_date_start) >= 0;
+                    };
+                } else {
+                    filter = (row) => {
+                        var jo_date_start = Date ();
+                        jo_date_start.set_parse (row.jo_date_start);
+
+                        return start.compare (jo_date_start) == 0;
+                    };
+                }
+            } else if (start.valid ()) {
+                filter = (row) => {
+                    var jo_date_start = Date ();
+                    jo_date_start.set_parse (row.jo_date_start);
+
+                    return start.compare (jo_date_start) < 0;
+                };
+            } else if (end.valid ()) {
+                filter = (row) => {
+                    var jo_date_start = Date ();
+                    jo_date_start.set_parse (row.jo_date_start);
+
+                    return end.compare (jo_date_start) > 0;
+                };
+            }
+        }
+
+        if (this.cancel_load != null) {
+            this.cancel_load.cancel ();
+        }
+
+        var cancel_load = new Cancellable ();
+        this.cancel_load = cancel_load;
+        list = database.create_job_orders_list ();
+
+        if (filter != null) {
+            database.load_job_orders_to_model.begin (list, filter, cancel_load, () => {
+                if (this.cancel_load == cancel_load) {
+                    this.cancel_load = null;
+                }
+            });
+        }
+    }
+
     public async void load_job_orders () {
         debug ("Request loading of job orders");
 
