@@ -271,10 +271,12 @@ public class Mpcjo.JobOrderListView : View {
     private void create_editor () {
         jobordereditor = new JobOrderEditor (database);
         jobordereditor.closed.connect (() => {
-            /* FIXME: Lessen loading here */
-            load_job_orders.begin ((obj, res) => {
-                load_job_orders.end (res);
-            });
+            if (!search_mode_enabled) {
+                /* FIXME: Lessen loading here */
+                load_job_orders.begin ((obj, res) => {
+                    load_job_orders.end (res);
+                });
+            }
         });
         jobordereditor.show ();
         stack.push (jobordereditor);
