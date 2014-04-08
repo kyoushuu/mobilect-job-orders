@@ -43,6 +43,8 @@ public class Mpcjo.JobOrderListView : View {
 
     private PrintSettings print_settings;
 
+    private Cancellable cancel_load;
+
     public const string PAPER_NAME_FANFOLD_GERMAN_LEGAL = "na_foolscap";
 
     construct {
@@ -221,8 +223,19 @@ public class Mpcjo.JobOrderListView : View {
     public async void load_job_orders () {
         debug ("Request loading of job orders");
 
+        if (this.cancel_load != null) {
+            this.cancel_load.cancel ();
+        }
+
+        var cancel_load = new Cancellable ();
+        this.cancel_load = cancel_load;
+
         list = database.create_job_orders_list ();
-        database.load_job_orders_to_model.begin (list);
+        database.load_job_orders_to_model.begin (list, null, cancel_load, () => {
+            if (this.cancel_load == cancel_load) {
+                this.cancel_load = null;
+            }
+        });
 
         debug ("Request to load job orders succeeded");
     }
