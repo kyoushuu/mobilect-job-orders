@@ -197,7 +197,7 @@ public class Database : Object {
                               typeof (string));                  /* Payment date */
     }
 
-    public async bool load_job_orders_to_model (ListStore model, GeneralFilter? filter = null) throws Error {
+    public async bool load_job_orders_to_model (ListStore model, GeneralFilter? filter = null, Cancellable? cancellable = null) throws Error {
         SourceFunc callback = load_job_orders_to_model.callback;
 
         debug ("Queue loading of job orders");
@@ -322,6 +322,12 @@ public class Database : Object {
 
                     return false;
                 });
+
+                if (cancellable != null && cancellable.is_cancelled ()) {
+                    /* FIXME: Should throw an error here */
+                    Idle.add((owned) callback);
+                    return null;
+                }
             }
 
             Idle.add((owned) callback);
@@ -348,7 +354,7 @@ public class Database : Object {
                               typeof (string)); /* Address */
     }
 
-    public async bool load_customers_to_model (ListStore model) throws Error {
+    public async bool load_customers_to_model (ListStore model, Cancellable? cancellable = null) throws Error {
         SourceFunc callback = load_customers_to_model.callback;
 
         debug ("Queue loading of customers");
@@ -405,6 +411,12 @@ public class Database : Object {
 
                     return false;
                 });
+
+                if (cancellable != null && cancellable.is_cancelled ()) {
+                    /* FIXME: Should throw an error here */
+                    Idle.add((owned) callback);
+                    return null;
+                }
             }
 
             Idle.add((owned) callback);
@@ -431,7 +443,7 @@ public class Database : Object {
                               typeof (string));                  /* Date */
     }
 
-    public async bool load_purchase_orders_to_model (ListStore model) throws Error {
+    public async bool load_purchase_orders_to_model (ListStore model, Cancellable? cancellable = null) throws Error {
         SourceFunc callback = load_purchase_orders_to_model.callback;
 
         debug ("Queue loading of purchase orders");
@@ -489,6 +501,12 @@ public class Database : Object {
 
                     return false;
                 });
+
+                if (cancellable != null && cancellable.is_cancelled ()) {
+                    /* FIXME: Should throw an error here */
+                    Idle.add((owned) callback);
+                    return null;
+                }
             }
 
             Idle.add((owned) callback);
@@ -516,7 +534,7 @@ public class Database : Object {
                               typeof (string));                  /* Remarks */
     }
 
-    public async bool load_invoices_to_model (ListStore model) throws Error {
+    public async bool load_invoices_to_model (ListStore model, Cancellable? cancellable = null) throws Error {
         SourceFunc callback = load_invoices_to_model.callback;
 
         debug ("Queue loading of invoices");
@@ -583,6 +601,12 @@ public class Database : Object {
 
                     return false;
                 });
+
+                if (cancellable != null && cancellable.is_cancelled ()) {
+                    /* FIXME: Should throw an error here */
+                    Idle.add((owned) callback);
+                    return null;
+                }
             }
 
             Idle.add((owned) callback);
@@ -1268,7 +1292,7 @@ public class Database : Object {
                               typeof (int)); /* Invoice ref. num. */
     }
 
-    public async bool load_mappings_to_model (ListStore model) throws Error {
+    public async bool load_mappings_to_model (ListStore model, Cancellable? cancellable = null) throws Error {
         SourceFunc callback = load_mappings_to_model.callback;
 
         debug ("Queue loading of mappings");
@@ -1333,6 +1357,12 @@ public class Database : Object {
 
                     return false;
                 });
+
+                if (cancellable != null && cancellable.is_cancelled ()) {
+                    /* FIXME: Should throw an error here */
+                    Idle.add((owned) callback);
+                    return null;
+                }
             }
 
             Idle.add((owned) callback);

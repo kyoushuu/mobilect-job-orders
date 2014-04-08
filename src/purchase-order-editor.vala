@@ -195,7 +195,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
         }
 
         var list = database.create_mappings_list ();
-        database.load_mappings_to_model.begin (list, (obj, res) => {
+        database.load_mappings_to_model.begin (list, null, (obj, res) => {
             list.foreach ((m, p, iter) => {
                 int po_id, in_id, in_number;
                 list.get (iter,
