@@ -33,6 +33,7 @@ mobilect_job_orders_SOURCES = \
 	purchase-order-editor.vala \
 	invoice-list-view.vala \
 	invoice-editor.vala \
+	date-util.vala \
 	config.vapi \
 	resources.c \
 	$(NULL)
