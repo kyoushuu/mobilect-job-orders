@@ -364,6 +364,8 @@ public class Mpcjo.JobOrderListView : View {
 
         var normal_font = FontDescription.from_string ("sans 12");
         var normal_font_height = 0.0;
+        var header_font = FontDescription.from_string ("sans bold 12");
+        var header_font_height = 0.0;
         var pages = 0;
         var items_per_page = 0;
 
@@ -373,8 +375,10 @@ public class Mpcjo.JobOrderListView : View {
 
             font_metrics = pcontext.load_font (normal_font).get_metrics (pcontext.get_language ());
             normal_font_height = units_to_double (font_metrics.get_ascent () + font_metrics.get_descent ());
+            font_metrics = pcontext.load_font (header_font).get_metrics (pcontext.get_language ());
+            header_font_height = units_to_double (font_metrics.get_ascent () + font_metrics.get_descent ());
 
-            items_per_page = (int) Math.floor (context.get_height () / (normal_font_height * 2));
+            items_per_page = (int) Math.floor ((context.get_height () - header_font_height) / (normal_font_height * 2));
             pages = (int) Math.ceil ((double) items.length / items_per_page);
 
             print.set_n_pages (pages);
@@ -383,30 +387,68 @@ public class Mpcjo.JobOrderListView : View {
         print.draw_page.connect ((context, page_nr) => {
             var cr = context.get_cairo_context ();
 
+            var padding = 2.0;
+            var column_width = context.get_width () / 4;
+
             var first_item = page_nr * items_per_page;
             var items_current_page = items_per_page;
             if (page_nr == pages - 1) {
                 items_current_page = items.length % items_per_page;
             }
 
-            cr.rectangle (0, 0, context.get_width (), items_current_page * normal_font_height * 2);
+            cr.rectangle (0, 0, context.get_width (), header_font_height + items_current_page * normal_font_height * 2);
             cr.set_line_width (1.0);
+            cr.stroke ();
+
+            cr.move_to (0, header_font_height);
+            cr.rel_line_to (context.get_width (), 0);
             cr.stroke ();
 
             cr.set_line_width (0.5);
 
             for (var i = 1; i < items_current_page; i++) {
-                cr.move_to (0, normal_font_height * 2 * i);
+                cr.move_to (0, header_font_height + normal_font_height * 2 * i);
                 cr.rel_line_to (context.get_width (), 0);
                 cr.stroke ();
             }
 
-            var layout = context.create_pango_layout ();
-            layout.set_font_description (normal_font);
-            layout.set_width (units_from_double (context.get_width ()));
+            for (var i = 0; i < 4; i++) {
+                cr.move_to (column_width * (i + 1), 0);
+                cr.rel_line_to (0, header_font_height + normal_font_height * 2 * items_current_page);
+                cr.stroke ();
+            }
 
-            var padding = 2.0;
-            var column_width = context.get_width () / 4;
+            var layout = context.create_pango_layout ();
+
+            layout.set_font_description (header_font);
+            layout.set_alignment (Pango.Alignment.CENTER);
+            layout.set_height (units_from_double (header_font_height));
+            layout.set_width (units_from_double (column_width - padding * 2));
+
+            cr.move_to (padding, 0);
+
+            layout.set_markup ("Job Order", -1);
+            cairo_show_layout (cr, layout);
+
+            cr.rel_move_to (column_width, 0);
+
+            layout.set_markup ("Purchase Order", -1);
+            cairo_show_layout (cr, layout);
+
+            cr.rel_move_to (column_width, 0);
+
+            layout.set_markup ("Invoice", -1);
+            cairo_show_layout (cr, layout);
+
+            cr.rel_move_to (column_width, 0);
+
+            layout.set_markup ("Payment", -1);
+            cairo_show_layout (cr, layout);
+
+            layout.set_font_description (normal_font);
+            layout.set_alignment (Pango.Alignment.LEFT);
+            layout.set_height (units_from_double (normal_font_height * 2));
+            layout.set_width (units_from_double (column_width - padding * 2));
 
             for (var i = 0; i < items_current_page; i++) {
                 var ref_num = 0;
@@ -443,21 +485,13 @@ public class Mpcjo.JobOrderListView : View {
                 date.strftime (s, "%a, %d %b, %Y");
                 date_end = (string) s;
 
-                cr.move_to (padding, normal_font_height * 2 * i);
+                cr.move_to (padding, header_font_height + normal_font_height * 2 * i);
 
-                layout.set_font_description (normal_font);
-                layout.set_alignment (Pango.Alignment.LEFT);
-                layout.set_height (units_from_double (normal_font_height));
-                layout.set_width (units_from_double (column_width - padding * 2));
                 layout.set_markup (_("J.O. #%d").printf (ref_num), -1);
                 cairo_show_layout (cr, layout);
 
                 cr.rel_move_to (column_width, 0);
 
-                layout.set_font_description (normal_font);
-                layout.set_alignment (Pango.Alignment.LEFT);
-                layout.set_height (units_from_double (normal_font_height * 2));
-                layout.set_width (units_from_double (column_width - padding * 2));
                 if (po_refnum > 0) {
                     date.set_parse (po_date);
                     date.strftime (s, "%a, %d %b, %Y");
@@ -475,10 +509,6 @@ public class Mpcjo.JobOrderListView : View {
 
                 cr.rel_move_to (column_width, 0);
 
-                layout.set_font_description (normal_font);
-                layout.set_alignment (Pango.Alignment.LEFT);
-                layout.set_height (units_from_double (normal_font_height * 2));
-                layout.set_width (units_from_double (column_width - padding * 2));
                 if (in_refnum > 0) {
                     date.set_parse (in_date);
                     date.strftime (s, "%a, %d %b, %Y");
