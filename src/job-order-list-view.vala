@@ -442,7 +442,7 @@ public class Mpcjo.JobOrderListView : View {
 
             cr.rel_move_to (column_width, 0);
 
-            layout.set_markup ("Payment", -1);
+            layout.set_markup ("Status", -1);
             cairo_show_layout (cr, layout);
 
             layout.set_font_description (normal_font);
