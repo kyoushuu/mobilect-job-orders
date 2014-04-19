@@ -59,6 +59,7 @@ public class Mpcjo.Window : Mpcw.Window {
 
     public void initialize () {
         stack.show_back_button = false;
+        stack.transition_type = StackTransitionType.SLIDE_LEFT_RIGHT;
 
         switcher = new StackSwitcher ();
         switcher.stack = stack;
@@ -69,6 +70,7 @@ public class Mpcjo.Window : Mpcw.Window {
         stack.push (jo_page, "jo_page", "Job Orders");
 
         jo_stack = new Mpcw.Stack (headerbar);
+        jo_stack.transition_type = StackTransitionType.SLIDE_UP_DOWN;
         jo_stack.show ();
         jo_page.add (jo_stack);
 
@@ -77,6 +79,7 @@ public class Mpcjo.Window : Mpcw.Window {
         stack.push (po_page, "po_page", "Purchase Orders");
 
         po_stack = new Mpcw.Stack (headerbar);
+        po_stack.transition_type = StackTransitionType.SLIDE_UP_DOWN;
         po_stack.show ();
         po_page.add (po_stack);
 
@@ -85,6 +88,7 @@ public class Mpcjo.Window : Mpcw.Window {
         stack.push (in_page, "in_page", "Invoices");
 
         in_stack = new Mpcw.Stack (headerbar);
+        in_stack.transition_type = StackTransitionType.SLIDE_UP_DOWN;
         in_stack.show ();
         in_page.add (in_stack);
 
