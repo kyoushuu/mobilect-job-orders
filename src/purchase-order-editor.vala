@@ -291,7 +291,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
         return ret;
     }
 
-    private void add_invoice_row (int id, int refnum) {
+    private ListBoxRow add_invoice_row (int id, int refnum) {
         var row = new ListBoxRow ();
         row.set_data ("in_id", id);
         listbox_po_invoices.add (row);
@@ -307,6 +307,8 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
         label.show ();
 
         invoices.append (id);
+
+        return row;
     }
 
     [CCode (instance_pos = -1)]
@@ -323,7 +325,8 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
                     database.create_mapping.begin (po_id, item.id, (obj, res) => {
                         try {
                             if (database.create_mapping.end (res)) {
-                                add_invoice_row (item.id, item.ref_num);
+                                var row = add_invoice_row (item.id, item.ref_num);
+                                listbox_po_invoices.select_row (row);
                             }
                         } catch (Error e) {
                             warning ("Failed to map invoice to purchase order: %s", e.message);
@@ -345,8 +348,21 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
         database.remove_mapping.begin (po_id, in_id, (obj, res) => {
             try {
                 if (database.remove_mapping.end (res)) {
+                    var i = row.get_index ();
                     row.destroy ();
                     invoices.remove (in_id);
+
+                    var rows = listbox_po_invoices.get_children ();
+                    if (rows.length () == 0) {
+                        return;
+                    }
+
+                    if (i == rows.length ()) {
+                        i--;
+                    }
+
+                    var new_row = listbox_po_invoices.get_row_at_index (i);
+                    listbox_po_invoices.select_row (new_row);
                 }
             } catch (Error e) {
                 warning ("Failed to unmap invoice to purchase order: %s", e.message);
