@@ -36,6 +36,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
     private Frame frame_invoices;
     private ScrolledWindow scrolledwindow_invoices;
     private ListBox listbox_po_invoices;
+    private Label label_invoices_placeholder;
     private ToolButton toolbutton_in_remove;
 
     construct {
@@ -55,7 +56,10 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
             frame_invoices = builder.get_object ("frame_invoices") as Frame;
             scrolledwindow_invoices = builder.get_object ("scrolledwindow_invoices") as ScrolledWindow;
             listbox_po_invoices = builder.get_object ("listbox_po_invoices") as ListBox;
+            label_invoices_placeholder = builder.get_object ("label_invoices_placeholder") as Label;
             toolbutton_in_remove = builder.get_object ("toolbutton_in_remove") as ToolButton;
+
+            listbox_po_invoices.set_placeholder (label_invoices_placeholder);
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
