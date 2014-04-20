@@ -12,28 +12,28 @@
     </style>
   </object>
   <object class="GtkTreeViewColumn" id="treeviewcolumn_job_order">
-    <property name="min_width">225</property>
+    <property name="expand">True</property>
     <property name="title" translatable="yes">Job Order</property>
     <child>
       <object class="GtkCellRendererText" id="cellrenderertext_job_order_number"/>
     </child>
   </object>
   <object class="GtkTreeViewColumn" id="treeviewcolumn_purchase_order">
-    <property name="min_width">225</property>
+    <property name="expand">True</property>
     <property name="title" translatable="yes">Purchase Order</property>
     <child>
       <object class="GtkCellRendererText" id="cellrenderertext_purchase_order_number"/>
     </child>
   </object>
   <object class="GtkTreeViewColumn" id="treeviewcolumn_invoice">
-    <property name="min_width">225</property>
+    <property name="expand">True</property>
     <property name="title" translatable="yes">Invoice</property>
     <child>
       <object class="GtkCellRendererText" id="cellrenderertext_invoice_number"/>
     </child>
   </object>
   <object class="GtkTreeViewColumn" id="treeviewcolumn_payment">
-    <property name="min_width">225</property>
+    <property name="expand">True</property>
     <property name="title" translatable="yes">Payment</property>
     <child>
       <object class="GtkCellRendererText" id="cellrenderertext_payment"/>
