@@ -33,6 +33,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
     private SpinButton spinbutton_po_refnum;
     private DateEntry entry_po_date;
     private ListBox listbox_po_invoices;
+    private ToolButton toolbutton_in_remove;
 
     construct {
         try {
@@ -48,6 +49,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
             spinbutton_po_refnum = builder.get_object ("spinbutton_po_refnum") as SpinButton;
             entry_po_date = builder.get_object ("entry_po_date") as DateEntry;
             listbox_po_invoices = builder.get_object ("listbox_po_invoices") as ListBox;
+            toolbutton_in_remove = builder.get_object ("toolbutton_in_remove") as ToolButton;
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
@@ -350,6 +352,11 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
                 warning ("Failed to unmap invoice to purchase order: %s", e.message);
             }
         });
+    }
+
+    [CCode (instance_pos = -1)]
+    public void on_listbox_po_invoices_row_selected (ListBox list_box, ListBoxRow? row) {
+        toolbutton_in_remove.sensitive = row != null;
     }
 
 }
