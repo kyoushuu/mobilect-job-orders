@@ -18,7 +18,6 @@
     <child>
       <object class="GtkCellRendererText" id="cellrenderertext_invoice_number">
         <property name="xpad">10</property>
-        <property name="foreground_gdk">#88888a8a8585</property>
         <property name="width_chars">7</property>
       </object>
     </child>
