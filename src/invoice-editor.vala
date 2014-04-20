@@ -291,4 +291,9 @@ public class Mpcjo.InvoiceEditor : StackPage {
         return ret;
     }
 
+    [CCode (instance_pos = -1)]
+    public void on_spinbutton_in_refnum_value_changed (SpinButton spinbutton) {
+        stack.headerbar.title = _("Invoice #%d").printf ((int) spinbutton_in_refnum.value);
+    }
+
 }
