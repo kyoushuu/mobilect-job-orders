@@ -204,11 +204,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
                           Database.MappingsListColumns.INVOICE_REF_NUM, out in_number);
 
                 if (po_id == id && invoices.find (in_id) == null) {
-                    var label = new Label (_("Invoice #%d").printf (in_number));
-                    label.set_data ("in_id", in_id);
-                    listbox_po_invoices.add (label);
-                    label.show ();
-                    invoices.append (in_id);
+                    add_invoice_row (in_id, in_number);
                 }
 
                 return false;
@@ -293,6 +289,24 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
         return ret;
     }
 
+    private void add_invoice_row (int id, int refnum) {
+        var row = new ListBoxRow ();
+        row.set_data ("in_id", id);
+        listbox_po_invoices.add (row);
+        row.show ();
+
+        var label = new Label (_("Invoice #%d").printf (refnum));
+        label.set_alignment (0.0f, 0.5f);
+        label.set_margin_left (20);
+        label.set_margin_right (20);
+        label.set_margin_top (6);
+        label.set_margin_bottom (6);
+        row.add (label);
+        label.show ();
+
+        invoices.append (id);
+    }
+
     [CCode (instance_pos = -1)]
     public void on_spinbutton_po_refnum_value_changed (SpinButton spinbutton) {
         stack.headerbar.title = _("Purchase Order #%d").printf ((int) spinbutton_po_refnum.value);
@@ -307,11 +321,7 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
                     database.create_mapping.begin (po_id, item.id, (obj, res) => {
                         try {
                             if (database.create_mapping.end (res)) {
-                                var label = new Label (_("Invoice #%d").printf (item.ref_num));
-                                label.set_data ("in_id", item.id);
-                                listbox_po_invoices.add (label);
-                                label.show ();
-                                invoices.append (item.id);
+                                add_invoice_row (item.id, item.ref_num);
                             }
                         } catch (Error e) {
                             warning ("Failed to map invoice to purchase order: %s", e.message);
@@ -327,13 +337,13 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
     [CCode (instance_pos = -1)]
     public void toolbutton_in_remove_clicked (ToolButton toolbutton) {
-        var label = listbox_po_invoices.get_selected_row ().get_header ();
-        var in_id = label.get_data<int> ("in_id");
+        var row = listbox_po_invoices.get_selected_row ();
+        var in_id = row.get_data<int> ("in_id");
 
         database.remove_mapping.begin (po_id, in_id, (obj, res) => {
             try {
                 if (database.remove_mapping.end (res)) {
-                    label.destroy ();
+                    row.destroy ();
                     invoices.remove (in_id);
                 }
             } catch (Error e) {
