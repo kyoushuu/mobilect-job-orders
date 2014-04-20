@@ -173,6 +173,14 @@ public class Mpcjo.JobOrderListView : View {
             /* Print button is sensitive if there is a selected item */
             bind_property ("selected-items-num", button_print, "sensitive",
                            BindingFlags.SYNC_CREATE);
+
+            notify["search-mode-enabled"].connect (() => {
+                if (search_mode_enabled) {
+                    list = null;
+                } else if (database != null) {
+                    load_job_orders.begin ();
+                }
+            });
         } catch (Error e) {
             error ("Failed to create widget: %s", e.message);
         }
