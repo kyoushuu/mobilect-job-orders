@@ -294,6 +294,11 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
     }
 
     [CCode (instance_pos = -1)]
+    public void on_spinbutton_po_refnum_value_changed (SpinButton spinbutton) {
+        stack.headerbar.title = _("Purchase Order #%d").printf ((int) spinbutton_po_refnum.value);
+    }
+
+    [CCode (instance_pos = -1)]
     public void toolbutton_in_add_clicked (ToolButton toolbutton) {
         var listview = new InvoiceListView (database);
         listview.add_activated.connect ((items) => {

@@ -64,6 +64,7 @@
             <property name="adjustment">adjustment_po_refnum</property>
             <property name="climb_rate">10</property>
             <property name="numeric">True</property>
+            <signal name="value-changed" handler="mpcjo_purchase_order_editor_on_spinbutton_po_refnum_value_changed" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">1</property>
