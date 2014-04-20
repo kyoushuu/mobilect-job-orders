@@ -32,6 +32,9 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
     private SpinButton spinbutton_po_refnum;
     private DateEntry entry_po_date;
+
+    private Frame frame_invoices;
+    private ScrolledWindow scrolledwindow_invoices;
     private ListBox listbox_po_invoices;
     private ToolButton toolbutton_in_remove;
 
@@ -48,6 +51,9 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
             spinbutton_po_refnum = builder.get_object ("spinbutton_po_refnum") as SpinButton;
             entry_po_date = builder.get_object ("entry_po_date") as DateEntry;
+
+            frame_invoices = builder.get_object ("frame_invoices") as Frame;
+            scrolledwindow_invoices = builder.get_object ("scrolledwindow_invoices") as ScrolledWindow;
             listbox_po_invoices = builder.get_object ("listbox_po_invoices") as ListBox;
             toolbutton_in_remove = builder.get_object ("toolbutton_in_remove") as ToolButton;
         } catch (Error e) {
@@ -308,7 +314,24 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
 
         invoices.append (id);
 
+        adjust_invoice_list_scrolling ();
+
         return row;
+    }
+
+    private void adjust_invoice_list_scrolling () {
+        var rows = listbox_po_invoices.get_children ();
+
+        if (rows.length () >= 3) {
+            int height;
+
+            frame_invoices.get_preferred_height (null, out height);
+            frame_invoices.set_size_request (-1, height);
+            scrolledwindow_invoices.set_policy (PolicyType.NEVER, PolicyType.AUTOMATIC);
+        } else {
+            frame_invoices.set_size_request (-1, -1);
+            scrolledwindow_invoices.set_policy (PolicyType.NEVER, PolicyType.NEVER);
+        }
     }
 
     [CCode (instance_pos = -1)]
@@ -351,6 +374,8 @@ public class Mpcjo.PurchaseOrderEditor : StackPage {
                     var i = row.get_index ();
                     row.destroy ();
                     invoices.remove (in_id);
+
+                    adjust_invoice_list_scrolling ();
 
                     var rows = listbox_po_invoices.get_children ();
                     if (rows.length () == 0) {
